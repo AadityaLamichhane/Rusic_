@@ -1,0 +1,24 @@
+{
+  "name": "@repo/lib",
+  "version": "0.0.0",
+  "private": true,
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./wsenvsetup": "./wsenvsetup.ts",
+    "./authOptions": "./authOptions.ts",
+    "./utils": "./utils.ts",
+    "./socketContext": "./hooks/useSocket.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.13.0",
+    "@types/jsonwebtoken": "^9.0.10",
+    "jsonwebtoken": "^9.0.2",
+    "next-auth": "^4.24.11",
+    "react": "19.1.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19"
+  }
+}
