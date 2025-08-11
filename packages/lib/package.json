@@ -9,7 +9,8 @@
     "./wsenvsetup": "./wsenvsetup.ts",
     "./authOptions": "./authOptions.ts",
     "./utils": "./utils.ts",
-    "./socketContext": "./hooks/useSocket.ts"
+    "./socketContext": "./hooks/useSocket.ts",
+    "./socketType":"./wsenvsetup.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.13.0",

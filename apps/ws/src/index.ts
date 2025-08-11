@@ -1,10 +1,8 @@
 import { createClient, RedisClientType} from "redis";
+import { SessionType }  from  "@repo/lib/wsenvsetup"
 import { WebSocketServer } from "ws";
-import {createServer} from 'http';
 import * as dotenv from "dotenv";
-import { getToken } from "next-auth/jwt"
 import jwt from 'jsonwebtoken'
-import NextAuth from "next-auth";
 dotenv.config();
 const redisConfig = {
     host:process.env.REDIS_HOST|| 'localhost',
@@ -16,8 +14,8 @@ const redisConfig = {
 
  enum Socket_Sending_type{
     Stream_Man, 
-    Join_Stream
-    
+    Join_Section,
+    Create_Stream
  }
  type Socket_Sending= {
     type : Socket_Sending_type,
@@ -43,11 +41,7 @@ async function initializeRedis(){
 
         });
         client.on("messege",async(raw)=>{
-
-
-
         })
-
     await client.connect();
     }
     catch(err){
@@ -61,17 +55,36 @@ initializeRedis().then(()=>{
 
  function ServerHandeling(){
     const wss = new WebSocketServer({port:8080});
-
+    let isJoined = false ;
+    
     wss.on("connection",(socket:any)=>{
         //handle the socket Connection with the id given to join the section as soon as user enter the room
          
         socket.on("messege",(messege:string)=>{
         
              const messegeJson:Socket_Sending  = JSON.parse(messege);
-             messegeHandling(messegeJson);
+             if(messegeJson.type==Socket_Sending_type.Join_Section){
+
+                const decryptedToken = jwt.decode( messegeJson.token as string || "");
+                if(decryptedToken){
+                  JoinMessegeHandling(messegeJson,decryptedToken).then(async()=>{
+                    switch(messegeJson.type){
+                        case Socket_Sending_type.Create_Stream:
+                            console.log("You are trying to create the stream");
+                            // Todo make the change in redis first and then asynchronously do the db call 
+
+                        case Socket_Sending_type.Stream_Man:
+                            // Connect to the function that checks the user and then return the 
+                            console.log("You are trying to manipulate ")
+                    }
+                  } );
+                }
+             }
+
             //  Hadnle the user to join and only run the switch case if the user is inside the room
-            if(messegeJson.type==Socket_Sending_type.Join_Stream){
-                console.log("You are Trying to join the room with the Roomid ")
+            if(messegeJson.type==Socket_Sending_type.Join_Section){
+                console.log("You are Trying to join the room with the Roomid ");
+
 
             }
     })
@@ -85,14 +98,14 @@ process.on('SIGINT', async () => {
 });
 
 
- const messegeHandling = async (jsonData:Socket_Sending)=>{
+ const JoinMessegeHandling = async (jsonData:Socket_Sending,decryptedToken:any)=>{
     console.log("You are handing the messgee");
                 switch(jsonData.type){
-                    case Socket_Sending_type.Join_Stream:
+                    case Socket_Sending_type.Create_Stream:
                         await client.lPush("stream",JSON.stringify({
-                            type:Socket_Sending_type.Join_Stream,
+                            type:Socket_Sending_type.Create_Stream,
                             url:jsonData.url,
-                            userId:jsonData.
+                            userId:decryptedToken.id
                         }))
              }
 
