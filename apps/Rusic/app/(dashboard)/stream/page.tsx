@@ -6,8 +6,9 @@ import  { useSocketContext }  from "@repo/lib/socketContext";
 import { useRouter } from "next/navigation";
 export default function Stream (){
     const sessionInformation =  useSession();
-    const inpvalue  = useRef<HTMLInputElement>(null);
     const [messege , setMessege ] = useState(['']);
+    const [contextgiver , setContextGiver] = useState('');
+    console.log(contextgiver);
     const navigate = useRouter();
     const {socket , loading,error,errorsyntax } = useSocketContext();
     if(socket!=null){
@@ -45,15 +46,13 @@ export default function Stream (){
             <div className="flex flex-col justify-center items-center font-medium ">
             Enter the Stream url 
             <br></br>
-            <input  ref={inpvalue} placeholder='Enter the url of the Link' className="border p-2  " type="text" />
             </div>
             <div className="flex ">
-                <ButtonComponent inputValue={inpvalue.current?.value  as string}
+                <ButtonComponent setContextGiver ={setContextGiver} contextgiver={contextgiver}
                 >
                 </ButtonComponent>
                 <button className="flex justify-center items-center bg-blue-400 px-4 p-2 m-2 rounded-3xl text-white " onClick={()=>{
                     console.log("Round trip to the Db ");
-                navigate.push(`/localhost:3000/stream/${inpvalue}`)
                 }} >
                     upvote 
                 </button>

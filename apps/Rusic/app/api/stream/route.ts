@@ -11,24 +11,15 @@ const CreateStreamSchem = z.object({
 })
     export async function POST(req:NextRequest){
         const session =await getServerSession( authOptions );
+        const userInformation = session.user;
         try{
             const inputJson = await req.json();
-            const parsedData = CreateStreamSchem.parse(inputJson);
-          if(!session?.user){
-            return NextResponse.json({
-                msg:"UnAuthenticaeted for the request"
-            },{
-                status:411
-            })
-          } 
-           const userInformation = await db.user.findFirst({
-            // Check if the User Exist And iif not then give them the error 
-            where:{
-                email:session.user?.email ?? ""
+            if(!inputJson){
+                console.log("Not any required information cannot get the input");
+                return NextResponse.json({msg:"Cannot find the infomration to add the stream"});
             }
-           });
-         const isYt = parsedData.url.match(youtubeRegex);
-        const videoId = parsedData.url ? parsedData.url.match(youtubeRegex)?.[1] : null;
+        const isYt = inputJson.url.match(youtubeRegex);
+        const videoId = inputJson.url ? inputJson.url.match(youtubeRegex)?.[1] : null;
             if (!isYt || !videoId) {
                 return NextResponse.json(
                     {
@@ -39,17 +30,7 @@ const CreateStreamSchem = z.object({
                     },
                 );
             }
-            const videoObject = GetVideoDetails(videoId);
-            console.log(videoObject);
-
-                await db.stream.create({
-                    data:{
-                        userId:userInformation?.id||  "",
-                        url: parsedData.url,
-                        urlId:videoId ,
-                        type:"youtube",
-                    }
-                })
+            const videoObject = await GetVideoDetails(videoId);
             return NextResponse.json({
                 msg:"Success in Job ",
                 hello:"This iis working "
