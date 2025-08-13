@@ -1,8 +1,9 @@
 import { createClient, RedisClientType} from "redis";
-import { SessionType }  from  "@repo/lib/wsenvsetup"
 import { WebSocketServer } from "ws";
 import * as dotenv from "dotenv";
+import prisma from  "@repo/db/client"
 import jwt from 'jsonwebtoken'
+import { url } from "inspector";
 dotenv.config();
 const redisConfig = {
     host:process.env.REDIS_HOST|| 'localhost',
@@ -12,16 +13,23 @@ const redisConfig = {
     database:parseInt(process.env.REDIS_DB ||"0")
 }
 
- enum Socket_Sending_type{
+ export enum Socket_Sending_type{
     Stream_Man, 
     Join_Section,
-    Create_Stream
+    Create_Stream,
+    Initial_Call
  }
- type Socket_Sending= {
+ export type Socket_Sending= {
     type : Socket_Sending_type,
-    url: String  ,
-    token?: String,
-    sectionId?: String
+    url?: string  ,
+    token?: string,
+    sectionId?: string
+    msg?:String
+ }
+ let socketSendingVariable: Socket_Sending = {
+     type:Socket_Sending_type.Initial_Call,
+     
+     
  }
 let client :RedisClientType ; 
 async function initializeRedis(){
@@ -51,44 +59,45 @@ async function initializeRedis(){
 initializeRedis().then(()=>{
      ServerHandeling(); 
 })
-
-
+isJoined = false ; 
  function ServerHandeling(){
     const wss = new WebSocketServer({port:8080});
-    let isJoined = false ;
-    
     wss.on("connection",(socket:any)=>{
-        //handle the socket Connection with the id given to join the section as soon as user enter the room
-         
-        socket.on("messege",(messege:string)=>{
-        
-             const messegeJson:Socket_Sending  = JSON.parse(messege);
-             if(messegeJson.type==Socket_Sending_type.Join_Section){
+        socket.on("message",async(message:string)=>{
+          console.log(message);
+             const messegeJson:Socket_Sending  = JSON.parse(message);
+            if(messegeJson.token && messegeJson.type==Socket_Sending_type.Initial_Call){
+                const data = await JoinMessegeHandling(messegeJson.token);
+                if(data){
+                    socketSendingVariable = {
+                        type:Socket_Sending_type.Initial_Call,
+                        msg:"success"
+                    }
+                    isJoined =true  
 
-                const decryptedToken = jwt.decode( messegeJson.token as string || "");
-                if(decryptedToken){
-                  JoinMessegeHandling(messegeJson,decryptedToken).then(async()=>{
+                }else{
+                    socketSendingVariable = {
+                        type:Socket_Sending_type.Initial_Call,
+                        msg:"fail"
+                    }
+                }
+                socket.send(JSON.stringify(socketSendingVariable));
+            }
+            else{
                     switch(messegeJson.type){
+                        case Socket_Sending_type.Join_Section:
+                            console.log("You are trying to join the session");
+                            break;
                         case Socket_Sending_type.Create_Stream:
                             console.log("You are trying to create the stream");
-                            // Todo make the change in redis first and then asynchronously do the db call 
-
                         case Socket_Sending_type.Stream_Man:
-                            // Connect to the function that checks the user and then return the 
                             console.log("You are trying to manipulate ")
                     }
-                  } );
-                }
-             }
-
-            //  Hadnle the user to join and only run the switch case if the user is inside the room
+            }
             if(messegeJson.type==Socket_Sending_type.Join_Section){
                 console.log("You are Trying to join the room with the Roomid ");
-
-
             }
     })
-    //  client.lPush("submission",JSON.stringify({problemid , code , language , userId })) 
 });
  }
 process.on('SIGINT', async () => {
@@ -96,17 +105,31 @@ process.on('SIGINT', async () => {
     await client.quit();
     process.exit(0);
 });
-
-
- const JoinMessegeHandling = async (jsonData:Socket_Sending,decryptedToken:any)=>{
-    console.log("You are handing the messgee");
-                switch(jsonData.type){
-                    case Socket_Sending_type.Create_Stream:
-                        await client.lPush("stream",JSON.stringify({
-                            type:Socket_Sending_type.Create_Stream,
-                            url:jsonData.url,
-                            userId:decryptedToken.id
-                        }))
-             }
-
+ const JoinMessegeHandling= async(token:string)=>{
+    try{
+            const decryptedToken = jwt.verify(token,process.env.AUTH_SECRET as string);
+            if(decryptedToken!=null){
+                //@ts-ignore
+            }
+            if(decryptedToken!=null){
+                const prismaUser = await prisma.user.findFirst({
+                    where:{
+                        //@ts-ignore
+                        id:decryptedToken.id 
+                    }
+                });
+            if(prismaUser==null){
+                console.log("No such user was found");
+                socketSendingVariable= {...socketSendingVariable,msg:"fail"}
+                return false ; 
+            }
+            console.log("Hey you are legit user");
+            return true ; 
+            }
+    }catch(err){
+            console.log(err);
+            console.log("you are handing the messege");
+            return false ; 
+    }
+            return true ; 
 }

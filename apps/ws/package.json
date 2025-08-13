@@ -1,5 +1,5 @@
 {
-  "name": "ws",
+  "name": "@repo/ws",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -10,6 +10,9 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "exports":{
+    "./SocketType":"./dist/index.js"
+  },
   "packageManager": "pnpm@9.0.0",
   "dependencies": {
     "@types/jsonwebtoken": "^9.0.10",
@@ -21,7 +24,7 @@
     "ws": "^8.18.3"
   },
   "devDependencies": {
-    "typescript": "5.7.3",
-    "@repo/lib":"workspace:*"
+    "typescript": "5.7.3"
+    ,"@repo/db":"workspace:*"
   }
 }

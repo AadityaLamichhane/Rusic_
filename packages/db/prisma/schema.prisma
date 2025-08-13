@@ -34,7 +34,9 @@ model Stream{
   url     String
   urlId   String 
   upvotes Upvotes[]
-  type    StreamType
+  type    StreamType @default(youtube)
+  sectionId String 
+  section Section @relation(fields: [sectionId],references: [id])
   user    User @relation(fields: [userId] ,references: [id])
 
 }
@@ -49,5 +51,6 @@ model Upvotes{
 model Section{
   id        String @default(uuid()) @unique
   createrId String
+  stream   Stream[]
   user      User @relation(fields: [createrId], references: [id])
 }

@@ -7,7 +7,8 @@ export const  RedirectingButton = ({children}:{children:React.ReactNode})=>{
     return <>
         <button onClick={async()=>{
 
-            // call an action to join the db and then redirect it to theuser 
+            // call an action to join in the db and then redirect it to theuser 
+
         }} className="border rounded-md p-2 hover:bg-black hover:text-white cursor-pointer">
             {children}
         </button>
