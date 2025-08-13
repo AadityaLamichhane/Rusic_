@@ -3,20 +3,17 @@ import z from "zod";
 import { getServerSession } from "next-auth";
 import { youtubeRegex } from "@repo/lib/utils" 
 import { authOptions } from "@repo/lib/authOptions";
-import db from '@repo/lib/db'
-import { parse } from "path";
+import db from '@repo/db/client'
+import { GetVideoDetails } from "youtube-search-api";
 const CreateStreamSchem = z.object({
     url: z.string(),
     email:z.string()
 })
     export async function POST(req:NextRequest){
-
         const session =await getServerSession( authOptions );
         try{
-
             const inputJson = await req.json();
             const parsedData = CreateStreamSchem.parse(inputJson);
-
           if(!session?.user){
             return NextResponse.json({
                 msg:"UnAuthenticaeted for the request"
@@ -32,18 +29,19 @@ const CreateStreamSchem = z.object({
            });
          const isYt = parsedData.url.match(youtubeRegex);
         const videoId = parsedData.url ? parsedData.url.match(youtubeRegex)?.[1] : null;
-            
-                    if (!isYt || !videoId) {
-            return NextResponse.json(
-                {
-                message: "Invalid YouTube URL format",
-                },
-                {
-                status: 400,
-                },
-            );
+            if (!isYt || !videoId) {
+                return NextResponse.json(
+                    {
+                    message: "Invalid YouTube URL format",
+                    },
+                    {
+                    status: 400,
+                    },
+                );
             }
-        
+            const videoObject = GetVideoDetails(videoId);
+            console.log(videoObject);
+
                 await db.stream.create({
                     data:{
                         userId:userInformation?.id||  "",

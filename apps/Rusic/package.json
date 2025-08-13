@@ -22,17 +22,18 @@
     "redis": "^5.8.0",
     "uuid": "^11.1.0",
     "ws": "^8.18.3",
+    "youtube-search-api": "^2.0.1",
     "zod": "^4.0.14"
   },
   "devDependencies": {
+    "@repo/db": "workspace:*",
+    "@repo/lib": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "tailwindcss": "^4",
-    "@repo/db":"workspace:*",
-    "typescript": "^5",
-    "@repo/typescript-config": "workspace:*",
-    "@repo/lib": "workspace:*"
+    "typescript": "^5"
   }
 }

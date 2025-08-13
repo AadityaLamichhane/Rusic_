@@ -18,26 +18,22 @@ let exportVariable :ExportType = {
     isSection:false ,
     createdBy:""
 } ; 
-// const exportvalue:ExportType  ={isOwner:false  }; 
 export async function  onConnectionToSection(sectionprops:string ){
-//    Create the section with the user creating id
     const session = await getServerSession(authOptions);
-    // Type guard to validate session
     if (!session || !session.user) {
         exportVariable.isError = true ; 
         exportVariable.AnyError="No any session was found for the user  "
         return exportVariable;
     }
-    // Check if session.user has required SessionType properties
     const Clientuser = session.user;
     if (!Clientuser.id || !Clientuser.name || !Clientuser.email) {
         exportVariable.isError = true
         exportVariable.AnyError = "Invalid session: missing required user properties"
         return exportVariable;
     }
-    const sessionInformation: SessionType = Clientuser as SessionType;
+    const sessionInformation: SessionType = Clientuser ;
     try{
-           const sectionuser = await  prisma.section.findFirst({
+           const sectioninfo = await  prisma.section.findFirst({
              where:{
                  createrId:session.user.id,
                  id:sectionprops
@@ -45,21 +41,26 @@ export async function  onConnectionToSection(sectionprops:string ){
          });
              const streamerInformation = await prisma.user.findFirst({
                 where:{
-                    id:sectionuser?.createrId
+                    id:sectioninfo?.createrId
                 }
              })
-            
-         if(sectionuser==null){
-            exportVariable.AnyError = "no section"
-            // There is not any section of such thing so i have to throw some flag .
-
-            return  {}  
+         if(sectioninfo==null){
+            exportVariable.AnyError = "No section Was found"
+            return exportVariable ; 
+         }else{
+            exportVariable.isSection = false 
          }
          
-         if(sectionuser?.id && sectionuser.createrId == Clientuser.id ){
+         if(sectioninfo && sectioninfo.createrId == Clientuser.id ){
+            exportVariable.isOwner = true ; 
             // Return the control that is for the Creatr 
+         }else{
+            exportVariable.createdBy = streamerInformation.name ; 
+
          }
+         return exportVariable; 
     }catch(err){
+        console.log("Db call error thrown ");
         throw new Error("Eror while getting the information");
     }
 

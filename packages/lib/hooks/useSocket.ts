@@ -86,5 +86,5 @@ useEffect(()=>{
         afterToken();
         }
     },[token]);
-    return {socket , loading , error , token ,errorsyntax}
+    return {socket , loading , error ,errorsyntax}
 }

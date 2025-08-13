@@ -59,7 +59,7 @@ async function initializeRedis(){
 initializeRedis().then(()=>{
      ServerHandeling(); 
 })
-isJoined = false ; 
+let isJoined = false ; 
  function ServerHandeling(){
     const wss = new WebSocketServer({port:8080});
     wss.on("connection",(socket:any)=>{
@@ -132,4 +132,9 @@ process.on('SIGINT', async () => {
             return false ; 
     }
             return true ; 
+}
+const JoinSection = ()=>{
+    console.log("ws is handling the Ws thingyy");
+    
+    
 }
