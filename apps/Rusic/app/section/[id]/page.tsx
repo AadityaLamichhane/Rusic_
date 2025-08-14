@@ -4,7 +4,8 @@ import { useSocketContext } from "@repo/lib/socketContext";
 import { useParams } from "next/navigation"
 import { handleClientScriptLoad } from "next/script";
 import { use, useEffect , useState } from "react"
-
+import { Socket_Sending } from "@repo/lib/socketContext";
+import { Socket_Sending_type } from "@repo/lib/socketContext";
 export type SectionPageProps = {
     params: Promise<{
         id:string
@@ -20,8 +21,12 @@ type ExportType = {
 let sectionInformation :ExportType={
     isOwner:false , 
     isSection:false
-
 }
+
+let socketSendingVariable :Socket_Sending  = {
+  type:Socket_Sending_type.Initial_Call
+};
+
 
 export default function Component({params}:SectionPageProps) {
     const [loadingforsection , setLoadingforSection ] = useState(true);
@@ -30,11 +35,10 @@ export default function Component({params}:SectionPageProps) {
     const {id} = resolvedParams;
     useEffect(()=>{
          onConnectionToSection(id).then((data :any)=>{
-            sectionInformation={...data};
-            console.log(sectionInformation.isOwner);
-            console.log("Connnection to the section is Procedded as expected ");
+          if(!data.isError){
+            sectionInformation = {...data};
             setLoadingforSection(false);
-
+          }
             // 
          });
     },[]);
@@ -66,16 +70,18 @@ if(loadingforsection){
         </div>
     </div>
             {loadingforsection==false && socket? <>
-            <LoadingSectionComponent id={id}>
+            <LoadingSectionComponent id={id} socket={socket}>
             </LoadingSectionComponent>
 
             </>:<></>}
         {id}
     </>
 }
-const LoadingSectionComponent = ({id}:{id:string})=>{
+const LoadingSectionComponent = ({id,socket}:{id:string,socket:WebSocket|null})=>{
     const handleCreateSection =()=> {
-        console.log('Creating new Section')
+      socketSendingVariable.type = Socket_Sending_type.Join_Section
+      socketSendingVariable.sectionId = id;
+      socket?.send(JSON.stringify(socketSendingVariable));
     }
     return <>
      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex flex-col">

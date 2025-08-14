@@ -4,12 +4,12 @@ import { useSession } from "next-auth/react";
 import { ButtonComponent } from "./../../components/ButtonComponet";
 import  { useSocketContext }  from "@repo/lib/socketContext";
 import { useRouter } from "next/navigation";
+import { InputStreamComponent } from "@/app/components/InputStreamComponent";
 export default function Stream (){
     const sessionInformation =  useSession();
     const [messege , setMessege ] = useState(['']);
-    const [contextgiver , setContextGiver] = useState('');
-    console.log(contextgiver);
     const navigate = useRouter();
+
     const {socket , loading,error,errorsyntax } = useSocketContext();
     if(socket!=null){
         socket.onopen=()=>{
@@ -19,8 +19,6 @@ export default function Stream (){
         })
     }
     useEffect(()=>{
-        // Get the user id and send the Request to the Redis and connect the user to the ws connection
-        // send the socket request to send the joining of the room
     },[loading]);
     if(loading){
         return <>
@@ -48,19 +46,11 @@ export default function Stream (){
             <br></br>
             </div>
             <div className="flex ">
-                <ButtonComponent setContextGiver ={setContextGiver} contextgiver={contextgiver}
-                >
-                </ButtonComponent>
-                <button className="flex justify-center items-center bg-blue-400 px-4 p-2 m-2 rounded-3xl text-white " onClick={()=>{
-                    console.log("Round trip to the Db ");
-                }} >
-                    upvote 
-                </button>
             </div>
         </div>
     </div>
         <div>
-            
+            <InputStreamComponent></InputStreamComponent>
         </div>
         <div>
 
@@ -68,3 +58,4 @@ export default function Stream (){
     </div>
     </>)
 } 
+

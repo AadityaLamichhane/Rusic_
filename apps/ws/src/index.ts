@@ -17,7 +17,8 @@ const redisConfig = {
     Stream_Man, 
     Join_Section,
     Create_Stream,
-    Initial_Call
+    Initial_Call,
+    Create_Section
  }
  export type Socket_Sending= {
     type : Socket_Sending_type,
@@ -86,12 +87,17 @@ let isJoined = false ;
             else{
                     switch(messegeJson.type){
                         case Socket_Sending_type.Join_Section:
-                            console.log("You are trying to join the session");
+                            console.log("You are trying to join the section");
                             break;
                         case Socket_Sending_type.Create_Stream:
                             console.log("You are trying to create the stream");
+                            break; 
                         case Socket_Sending_type.Stream_Man:
-                            console.log("You are trying to manipulate ")
+                            console.log("You are trying to manipulate ");
+                            break; 
+                        case Socket_Sending_type.Create_Section:
+                            console.log('You are trying to create the section');
+                            break;
                     }
             }
             if(messegeJson.type==Socket_Sending_type.Join_Section){

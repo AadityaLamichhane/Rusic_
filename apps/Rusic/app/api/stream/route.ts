@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import z from "zod";
-import { getServerSession } from "next-auth";
 import { youtubeRegex } from "@repo/lib/utils" 
 import { authOptions } from "@repo/lib/authOptions";
 import db from '@repo/db/client'
@@ -10,8 +9,6 @@ const CreateStreamSchem = z.object({
     email:z.string()
 })
     export async function POST(req:NextRequest){
-        const session =await getServerSession( authOptions );
-        const userInformation = session.user;
         try{
             const inputJson = await req.json();
             if(!inputJson){
@@ -33,7 +30,11 @@ const CreateStreamSchem = z.object({
             const videoObject = await GetVideoDetails(videoId);
             return NextResponse.json({
                 msg:"Success in Job ",
-                hello:"This iis working "
+                hello:"This iis working ",
+                videoId:videoId,
+                videoUrl:isYt[0],
+                videoinfo:videoObject
+
             },{status:200})
         } 
         catch(err){
