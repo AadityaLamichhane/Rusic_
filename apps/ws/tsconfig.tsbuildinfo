@@ -1,1 +1,1 @@
-{"root":["./src/index.ts","./src/serverhandling.ts"],"version":"5.8.3"}
+{"root":["./src/UserClass.ts","./src/index.ts","./src/redisconfig.ts","./src/serverhandling.ts"],"version":"5.8.3"}

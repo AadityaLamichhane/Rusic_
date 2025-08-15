@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import z from "zod";
 import { youtubeRegex } from "@repo/lib/utils" 
-import { authOptions } from "@repo/lib/authOptions";
-import db from '@repo/db/client'
 import { GetVideoDetails } from "youtube-search-api";
 const CreateStreamSchem = z.object({
     url: z.string(),

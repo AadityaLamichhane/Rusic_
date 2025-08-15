@@ -11,17 +11,19 @@ console.log(thumbnail);
    
     return <>
     {/* @ts-ignore */}
-    <div className='flex flex-col relative w-full h-full'>
+    <div className='flex flex-col relative w-full h-full '>
         {(videoData.current!=null) && thumbnail!=''?<>
         {/* //@ts-ignore */}
-         <div className="aspect-video bg-gray-200 overflow-hidden w-[1280px] h-[720px]">
+         <div className="aspect-video bg-gray-200 overflow-hidden w-[640px] h-[360px]" style={{
+         }}>
                     <img 
-                      src={thumbnail} 
+                      src={thumbnail?thumbnail:""} 
                       alt={"Image"}
-                      className="w-full h-full object-fit"
+                      className=" object-fit"
                     />
                   </div>
         </>:<></>}
+        {/* @ts-ignore */}
         <input  ref={inpvalue} placeholder='Enter the url of the Link' className="border p-2  " type="text" />
         <button className="bg-blue-400 p-2 m-2 text-white rounded-3xl px-4 cursor-pointer" onClick={async(e)=>
         {

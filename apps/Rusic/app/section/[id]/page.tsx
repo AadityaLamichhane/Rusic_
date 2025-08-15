@@ -74,14 +74,18 @@ if(loadingforsection){
             </LoadingSectionComponent>
 
             </>:<></>}
-        {id}
+      
     </>
 }
 const LoadingSectionComponent = ({id,socket}:{id:string,socket:WebSocket|null})=>{
     const handleCreateSection =()=> {
-      socketSendingVariable.type = Socket_Sending_type.Join_Section
+      socketSendingVariable.type = Socket_Sending_type.Join_Section;
       socketSendingVariable.sectionId = id;
       socket?.send(JSON.stringify(socketSendingVariable));
+      if(socket){
+        // @ts-ignore
+      }
+
     }
     return <>
      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex flex-col">
