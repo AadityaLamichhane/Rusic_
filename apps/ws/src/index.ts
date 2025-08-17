@@ -62,8 +62,15 @@ let isJoined = false ;
                             if(!socket.id){
                                 console.log("you are not authenticated");
                             } 
-                            Join_the_section(messegeJson.sectionId || '' ,socket.id,socket.name,socket);
-                            console.log("users are defined");
+                            const sectionCreation = await Join_the_section(messegeJson.sectionId || '' ,socket.id,socket.name,socket);
+                            if(sectionCreation==true){
+                                console.log("Your section is Added to the section");
+                            }
+                            else{
+                                console.log("Getting the information from the Sections");
+                            }
+                            console.log("Person has joined the section");
+                            
                             break;
                         case Socket_Sending_type.Create_Stream:
                             console.log("You are trying to create the stream");
@@ -106,30 +113,44 @@ let isJoined = false ;
     }
 }
 
-function Join_the_section (sectionid:string,userid:string,userName:string,socket:WebSocket){
+async function Join_the_section (sectionid:string,userid:string,userName:string,socket:WebSocket){
 // Create the user 
     const user  = new User(userName,socket);
     userIdMapping.set(userid,user);
 // Check if the sectioon is there yes -> just add the user , non -> make one and add user 
 // condition  2 
+    console.log(sectionid);
+
     if(!sectionsId.includes(sectionid)){
         sectionsId.push(sectionid);
         sectionMap.set(sectionid ,[user] );
+        console.log("Creatingg the sEction");
+        const sectionCreation = await prisma.section.create({
+            data:{ 
+                createrId:userid,
+                Sectionname:sectionid
+            }
+        });
+        if(sectionCreation==undefined || sectionCreation==null){
+            return false ; 
+
+        }
+        return true
     }else{
         //condition 1
         // get the user from the usrs 
         const usersarray = sectionMap.get(sectionid);
+        console.log("Section already exist");
         if(usersarray!=undefined){
             sectionMap.set(sectionid ,[...usersarray,user])
         }else{
             console.log("user array was undefined unexpected behaviour")
             return false ; 
         }
+    } 
     }
-    }
-return true ; 
     // Supposed to join the Section using the id->hashed ---> mapped to the Users
     // Users Class names id and So on and so forth which will be handled by this 
     // Map<token , Users>    Whre Users<user[]> and user = {name and So on filed in the}
 
-}
+

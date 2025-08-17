@@ -3,7 +3,6 @@ import  prisma from "@repo/db/client"
 import { authOptions } from "@repo/lib";
 import { SessionType } from "@repo/lib/wsenvsetup";
 import { getServerSession } from "next-auth";
-import { exportTraceState } from "next/dist/trace";
 type ExportType = {
     isOwner:boolean  ,
     isError?:boolean,
@@ -31,32 +30,28 @@ export async function  onConnectionToSection(sectionprops:string ){
         exportVariable.AnyError = "Invalid session: missing required user properties"
         return exportVariable;
     }
-    const sessionInformation: SessionType = Clientuser ;
     try{
+        exportVariable.isSection = false ;
            const sectioninfo = await  prisma.section.findFirst({
              where:{
-                 createrId:session.user.id,
-                 id:sectionprops
+                 Sectionname:sectionprops
              }
          });
+         if(sectioninfo!=null && sectioninfo!=undefined){
+            console.log("you are tyring to open the section");
+            exportVariable.isSection = true ;
              const streamerInformation = await prisma.user.findFirst({
                 where:{
                     id:sectioninfo?.createrId
                 }
              })
-         if(sectioninfo==null){
+         exportVariable.createdBy = streamerInformation.name; 
+         if(streamerInformation!=undefined){
+            exportVariable.isOwner=(streamerInformation.createrId==Clientuser.id)?true:false;
+         }
+         }else{
             exportVariable.AnyError = "No section Was found"
             return exportVariable ; 
-         }else{
-            exportVariable.isSection = false 
-         }
-         
-         if(sectioninfo && sectioninfo.createrId == Clientuser.id ){
-            exportVariable.isOwner = true ; 
-            // Return the control that is for the Creatr 
-         }else{
-            exportVariable.createdBy = streamerInformation.name ; 
-
          }
          return exportVariable; 
     }catch(err){

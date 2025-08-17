@@ -52,5 +52,6 @@ model Section{
   id        String @default(uuid()) @unique
   createrId String
   stream   Stream[]
+  Sectionname      String 
   user      User @relation(fields: [createrId], references: [id])
 }
