@@ -1,12 +1,14 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ChevronUp, Play, Share2, Plus } from "lucide-react"
-
+import LiteYouTubeEmbed from 'react-lite-youtube-embed';
+import 'react-lite-youtube-embed/dist/LiteYouTubeEmbed.css';
+import { youtubeRegex } from "@repo/lib"
 interface QueueItem {
   id: string
   title: string
@@ -14,28 +16,27 @@ interface QueueItem {
   addedAt: Date
 }
 
-export default function QueueApp() {
+export default function QueueApp({userSocket}:{userSocket:WebSocket}) {
   const [queue, setQueue] = useState<QueueItem[]>([])
   const [currentPlaying, setCurrentPlaying] = useState<QueueItem | null>(null)
   const [newItemTitle, setNewItemTitle] = useState("")
+  const youtubeId = useRef('');
   if(newItemTitle!=null){
-    // do the regex check and then get the yt thumnmail immediately 
-    console.log(newItemTitle);
+const randomvalue = youtubeRegex.test(newItemTitle);
+if(randomvalue){
+   youtubeId.current = newItemTitle.split('v=')[1] as string;
+}
   }
-
   // Sort queue by upvotes (descending)
   const sortedQueue = [...queue].sort((a, b) => b.upvotes - a.upvotes)
-
   const addItem = () => {
     if (!newItemTitle.trim()) return
-
     const newItem: QueueItem = {
       id: Date.now().toString(),
       title: newItemTitle.trim(),
       upvotes: 0,
       addedAt: new Date(),
     }
-
     setQueue((prev) => [...prev, newItem])
     setNewItemTitle("")
   }
@@ -71,6 +72,14 @@ export default function QueueApp() {
 
   return (
     <div className="min-h-screen bg-background p-4">
+            {newItemTitle?<>
+            
+               <LiteYouTubeEmbed id={youtubeId.current} title={'Add to quue'}  >
+                </LiteYouTubeEmbed> 
+
+
+
+            </>:<></>}
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">

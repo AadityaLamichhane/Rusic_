@@ -34,14 +34,14 @@ export default function Component({params}:SectionPageProps) {
           </div>
       </div>
                {(loadingforsection==false && socket && sectionInformation.isSection)?<>
-              <QueueApp>
+              <QueueApp userSocket={socket}>
               </QueueApp>
                </>:<>
                Failed to make the connection
                </>}
               {loadingforsection==false && socket && !sectionInformation.isSection? <>
 
-              <LoadingSectionComponent id={id} socket={socket} sectionInformation={sectionInformation}>
+              <LoadingSectionComponent id={id} socket={socket} sectionInformation={sectionInformation} >
               </LoadingSectionComponent>
 
               </>:<>
