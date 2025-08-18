@@ -18,6 +18,10 @@ export default function QueueApp() {
   const [queue, setQueue] = useState<QueueItem[]>([])
   const [currentPlaying, setCurrentPlaying] = useState<QueueItem | null>(null)
   const [newItemTitle, setNewItemTitle] = useState("")
+  if(newItemTitle!=null){
+    // do the regex check and then get the yt thumnmail immediately 
+    console.log(newItemTitle);
+  }
 
   // Sort queue by upvotes (descending)
   const sortedQueue = [...queue].sort((a, b) => b.upvotes - a.upvotes)
