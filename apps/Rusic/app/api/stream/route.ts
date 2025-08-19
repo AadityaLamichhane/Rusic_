@@ -9,6 +9,7 @@ const CreateStreamSchem = z.object({
     export async function POST(req:NextRequest){
         try{
             const inputJson = await req.json();
+            console.log(inputJson);
             if(!inputJson){
                 console.log("Not any required information cannot get the input");
                 return NextResponse.json({msg:"Cannot find the infomration to add the stream"});

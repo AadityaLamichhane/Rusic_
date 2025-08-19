@@ -1,14 +1,14 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ChevronUp, Play, Share2, Plus } from "lucide-react"
-import LiteYouTubeEmbed from 'react-lite-youtube-embed';
-import 'react-lite-youtube-embed/dist/LiteYouTubeEmbed.css';
 import { youtubeRegex } from "@repo/lib"
+import 'react-lite-youtube-embed/dist/LiteYouTubeEmbed.css';
+import axios from "axios"
 interface QueueItem {
   id: string
   title: string
@@ -17,46 +17,34 @@ interface QueueItem {
 }
 
 export default function QueueApp({userSocket}:{userSocket:WebSocket}) {
-  const [queue, setQueue] = useState<QueueItem[]>([])
   const [currentPlaying, setCurrentPlaying] = useState<QueueItem | null>(null)
   const [newItemTitle, setNewItemTitle] = useState("")
-  const youtubeId = useRef('');
-  if(newItemTitle!=null){
-const randomvalue = youtubeRegex.test(newItemTitle);
-if(randomvalue){
-   youtubeId.current = newItemTitle.split('v=')[1] as string;
-}
-  }
-  // Sort queue by upvotes (descending)
-  const sortedQueue = [...queue].sort((a, b) => b.upvotes - a.upvotes)
-  const addItem = () => {
-    if (!newItemTitle.trim()) return
-    const newItem: QueueItem = {
-      id: Date.now().toString(),
-      title: newItemTitle.trim(),
-      upvotes: 0,
-      addedAt: new Date(),
-    }
-    setQueue((prev) => [...prev, newItem])
-    setNewItemTitle("")
-  }
+  const [youtubeId,setYoutubeId ]= useState('');
+  const debounceTimer = useRef<NodeJS.Timeout| null>(null);
+  console.log(newItemTitle);
+  // Section to check for the youtube thumbnail and validation
+  useEffect(()=>{
+    if(newItemTitle!=null){
+      if(debounceTimer.current) clearTimeout(debounceTimer.current);
+      debounceTimer.current =  setTimeout(()=>{
+        if(newItemTitle.length>8){
+          const data = {
+            url:newItemTitle
+          }
+        const isYt = newItemTitle.match(youtubeRegex)?.[1];
+        console.log(isYt);
+        (isYt && newItemTitle)? setYoutubeId(`http://img.youtube.com/vi/`+isYt+'/mqdefault.jpg'):console.log("Nothing");
+      }
+      },500);
+      }
+      return ()=>{
+        if(debounceTimer.current){
+          clearTimeout(debounceTimer.current);
+        }
+      }
+  },[newItemTitle])
 
-  const upvoteItem = (id: string) => {
-    setQueue((prev) => prev.map((item) => (item.id === id ? { ...item, upvotes: item.upvotes + 1 } : item)))
-  }
 
-  const playNext = () => {
-    if (sortedQueue.length === 0) return
-
-    const nextItem = sortedQueue[0];
-    if(nextItem!=null){
-    setCurrentPlaying(nextItem)
-    setQueue((prev) => prev.filter((item) => item.id !== nextItem.id))
-    }else{
-        console.log('unexpected error');
-        return <></>; 
-    }
-  }
 
   const shareQueue = async () => {
     try {
@@ -72,13 +60,12 @@ if(randomvalue){
 
   return (
     <div className="min-h-screen bg-background p-4">
-            {newItemTitle?<>
+      
+            {youtubeId!=""?<>
             
-               <LiteYouTubeEmbed id={youtubeId.current} title={'Add to quue'}  >
-                </LiteYouTubeEmbed> 
-
-
-
+              <div>
+                <img src={youtubeId} alt="" />
+              </div>
             </>:<></>}
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
@@ -118,6 +105,26 @@ if(randomvalue){
         </Card>
 
         {/* Add Item Section */}
+        <AddItemToSection newItemTitle = {newItemTitle} setNewItemTitle = {setNewItemTitle} >
+        </AddItemToSection>
+        {/* Queue Section */}
+        <QueueSection socket={socket} setCurrentPlaying={setCurrentPlaying}></QueueSection>
+      </div>
+    </div>
+  )
+}
+
+const AddItemToSection = ({newItemTitle , setNewItemTitle }:any)=>{
+  const addItem = () => {
+    if (!newItemTitle.trim()) return
+    const newItem: QueueItem = {
+      id: Date.now().toString(),
+      title: newItemTitle.trim(),
+      upvotes: 0,
+      addedAt: new Date(),
+    }
+  }
+  return( <>
         <Card>
           <CardHeader>
             <CardTitle>Add to Queue</CardTitle>
@@ -127,8 +134,9 @@ if(randomvalue){
               <Input
                 placeholder="Enter item title..."
                 value={newItemTitle}
-                onChange={(e) => setNewItemTitle(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && addItem()}
+                onChange={(e) => {
+                  // have the logic to debounce the input of the User 
+                  setNewItemTitle(e.target.value)}}
                 className="flex-1"
               />
               <Button onClick={addItem} disabled={!newItemTitle.trim()}>
@@ -139,7 +147,33 @@ if(randomvalue){
           </CardContent>
         </Card>
 
-        {/* Queue Section */}
+  </>)
+}
+
+
+export function QueueSection({socket,setCurrentPlaying}:{socket:WebSocket,setCurrentPlaying:any}){
+// queue.lengh
+// sorted Queu
+// playNext
+// Upvote Item
+  const [queue, setQueue] = useState<QueueItem[]>([])
+  const upvoteItem = (id: string) => {
+    setQueue((prev) => prev.map((item) => (item.id === id ? { ...item, upvotes: item.upvotes + 1 } : item)))
+  }
+  const sortedQueue = [...queue].sort((a, b) => b.upvotes - a.upvotes)
+  const playNext = () => {
+    if (sortedQueue.length === 0) return
+
+    const nextItem = sortedQueue[0];
+    if(nextItem!=null){
+    setCurrentPlaying(nextItem)
+    setQueue((prev) => prev.filter((item) => item.id !== nextItem.id))
+    }else{
+        console.log('unexpected error');
+        return <></>; 
+    }
+  }
+return <>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Queue ({queue.length} items)</CardTitle>
@@ -185,7 +219,6 @@ if(randomvalue){
             )}
           </CardContent>
         </Card>
-      </div>
-    </div>
-  )
+
+  </>
 }
