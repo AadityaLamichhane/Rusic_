@@ -25,7 +25,13 @@ export default function Component({params}:SectionPageProps) {
     },[]);
     if(loading){
         return <>
+        <div className="flex flex-col w-screen h-screen justify-center items-center">
+          <div className="flex justify-center items-center">
+            <div>
                <Loader></Loader> 
+            </div>
+          </div>
+        </div>
         </>
     }
     return <>
@@ -34,16 +40,14 @@ export default function Component({params}:SectionPageProps) {
           </div>
       </div>
                {(loadingforsection==false && socket && sectionInformation.isSection)?<>
-              <QueueApp userSocket={socket}>
+              <QueueApp userSocket={socket} id={id}>
               </QueueApp>
                </>:<>
                Failed to make the connection
                </>}
               {loadingforsection==false && socket && !sectionInformation.isSection? <>
-
-              <LoadingSectionComponent id={id} socket={socket} sectionInformation={sectionInformation} >
-              </LoadingSectionComponent>
-
+                <LoadingSectionComponent id={id} socket={socket} sectionInformation={sectionInformation} >
+                </LoadingSectionComponent>
               </>:<>
                </>}
 

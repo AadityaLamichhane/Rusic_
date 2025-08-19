@@ -2,8 +2,9 @@ import { WebSocketServer } from "ws";
 import * as dotenv from "dotenv";
 dotenv.config();
 import prisma from  "@repo/db/client"
-import { initializeRedis } from "./redisconfig";
+import { client, initializeRedis } from "./redisconfig";
 import { User , sectionMap } from "./UserClass";
+
 import jwt from 'jsonwebtoken'
  export enum Socket_Sending_type{
     Stream_Man, 
@@ -73,6 +74,8 @@ let isJoined = false ;
                             
                             break;
                         case Socket_Sending_type.Create_Stream:
+                            // client.set(, )
+                          
                             console.log("You are trying to create the stream");
                             break; 
                         case Socket_Sending_type.Stream_Man:

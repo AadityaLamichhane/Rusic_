@@ -6,10 +6,10 @@ const redisConfig = {
     username:process.env.REDIS_USERNAME,
     database:parseInt(process.env.REDIS_DB ||"0")
 }
- let  client :RedisClientType ; 
+ export let client :RedisClientType ; 
 export async function initializeRedis(){
     try{
-        client = createClient({
+         client = createClient({
             socket:{
                 host:redisConfig.host,
                 port:redisConfig.port,
