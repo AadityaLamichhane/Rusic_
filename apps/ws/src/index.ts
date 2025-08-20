@@ -2,9 +2,8 @@ import { WebSocketServer } from "ws";
 import * as dotenv from "dotenv";
 dotenv.config();
 import prisma from  "@repo/db/client"
-import { client, initializeRedis } from "./redisconfig";
-import { User , sectionMap } from "./UserClass";
-
+import { pub,sub, initializeRedis } from "./redisconfig";
+import { User , sectionMap ,userSectionMap} from "./UserClass";
 import jwt from 'jsonwebtoken'
  export enum Socket_Sending_type{
     Stream_Man, 
@@ -28,6 +27,7 @@ const userIdMapping= new Map<string,User>();
  }
 initializeRedis().then(()=>{
      ServerHandeling(); 
+
 })
 let isJoined = false ; 
  function ServerHandeling(){
@@ -36,7 +36,6 @@ let isJoined = false ;
         socket.on("message",async(message:string)=>{
              const messegeJson:Socket_Sending  = JSON.parse(message);
             if(messegeJson.token && messegeJson.type==Socket_Sending_type.Initial_Call){
-                
                 const data = await JoinMessegeHandling(messegeJson.token);
                 if(data.status){
                     //@ts-ignore
@@ -70,12 +69,12 @@ let isJoined = false ;
                             else{
                                 console.log("Getting the information from the Sections");
                             }
-                            console.log("Person has joined the section");
-                            
                             break;
                         case Socket_Sending_type.Create_Stream:
                             // client.set(, )
-                          
+                            pub.publish(messegeJson.sectionId ||"",JSON.stringify(messegeJson));
+                        //   client.hSet(JSON.stringify(messegeJson.sectionId),JSON.stringify(messegeJson.url));
+                        
                             console.log("You are trying to create the stream");
                             break; 
                         case Socket_Sending_type.Stream_Man:
@@ -86,6 +85,13 @@ let isJoined = false ;
                             break;
                     }
             }
+    })
+    socket.on("close",()=>{
+        // socket.id -> sectionid and then remove the user form the setion
+        // if the user is last to teh section remove the section to 
+        // unsubscribe too 
+        const closingUserId = socket.id;
+        console.log(closingUserId);
     })
 });
  }
@@ -115,19 +121,14 @@ let isJoined = false ;
             return {status:false , id:'',name:"Anonymous"}; 
     }
 }
-
+let count = 0 ; 
 async function Join_the_section (sectionid:string,userid:string,userName:string,socket:WebSocket){
-// Create the user 
     const user  = new User(userName,socket);
     userIdMapping.set(userid,user);
-// Check if the sectioon is there yes -> just add the user , non -> make one and add user 
-// condition  2 
-    console.log(sectionid);
-
-    if(!sectionsId.includes(sectionid)){
-        sectionsId.push(sectionid);
-        sectionMap.set(sectionid ,[user] );
-        console.log("Creatingg the sEction");
+    if(!sectionMap.get(sectionid) && !sectionsId.includes(sectionid)){
+        sectionMap.set(sectionid ,[user]);
+        console.log(JSON.stringify(sectionMap));
+        console.log("Creating the new Section");
         const sectionCreation = await prisma.section.create({
             data:{ 
                 createrId:userid,
@@ -136,24 +137,37 @@ async function Join_the_section (sectionid:string,userid:string,userName:string,
         });
         if(sectionCreation==undefined || sectionCreation==null){
             return false ; 
-
         }
-        return true
+            sub.subscribe(sectionid,async (messege:string)=>{
+                const parsedMessege = await JSON.parse(messege);
+                try{
+                    const getSections = sectionMap.get(parsedMessege.sectionId);
+                    if(getSections!=undefined){
+                        for(let i = 0 ; i <getSections?.length; i++){
+                       count++; 
+                        }
+                        console.log(count);
+                    }
+                }catch(err){
+                    console.log(err);
+                }
+        })
+           return true ;  
     }else{
-        //condition 1
-        // get the user from the usrs 
+        
         const usersarray = sectionMap.get(sectionid);
-        console.log("Section already exist");
         if(usersarray!=undefined){
-            sectionMap.set(sectionid ,[...usersarray,user])
+            console.log("Section already exist");
+            sectionMap.set(sectionid ,[...usersarray,user]);
+            console.log(JSON.stringify(sectionMap));
         }else{
             console.log("user array was undefined unexpected behaviour")
             return false ; 
         }
     } 
+    // so the user is subscribing to the section id user:sectioon id and inside this i can do the 
     }
     // Supposed to join the Section using the id->hashed ---> mapped to the Users
     // Users Class names id and So on and so forth which will be handled by this 
     // Map<token , Users>    Whre Users<user[]> and user = {name and So on filed in the}
-
 

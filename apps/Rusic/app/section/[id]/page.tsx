@@ -43,7 +43,6 @@ export default function Component({params}:SectionPageProps) {
               <QueueApp userSocket={socket} id={id}>
               </QueueApp>
                </>:<>
-               Failed to make the connection
                </>}
               {loadingforsection==false && socket && !sectionInformation.isSection? <>
                 <LoadingSectionComponent id={id} socket={socket} sectionInformation={sectionInformation} >

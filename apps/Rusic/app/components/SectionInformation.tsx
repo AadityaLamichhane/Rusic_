@@ -9,14 +9,22 @@ import { ChevronUp, Play, Share2, Plus, Loader } from "lucide-react"
 import { youtubeRegex } from "@repo/lib"
 import { AddItemToSection } from "./section/AdditemToSection"
 import { QueueSection } from "./section/QueueSection"
+import { Socket_Sending, Socket_Sending_type } from "@repo/lib/socketContext"
 interface QueueItem {
   id: string
   title: string
   upvotes: number
   addedAt: Date
 }
-
+const socketSendingVariable:Socket_Sending={type:Socket_Sending_type.Join_Section};
 export default function QueueApp({userSocket,id}:{userSocket:WebSocket,id:string}) {
+  useEffect(()=>{
+      socketSendingVariable.sectionId = id;
+      userSocket?.send(JSON.stringify(socketSendingVariable));
+  },[])
+      // if(socket){
+        // @ts-ignore
+      // }
   const [currentPlaying, setCurrentPlaying] = useState<QueueItem | null>(null)
   const [newItemTitle, setNewItemTitle] = useState("")
   const [youtubeId,setYoutubeId ]= useState('');
@@ -35,7 +43,7 @@ export default function QueueApp({userSocket,id}:{userSocket:WebSocket,id:string
             }
           const isYt = newItemTitle.match(youtubeRegex)?.[1];
           console.log(isYt);
-          (isYt && newItemTitle)? setYoutubeId(`http://img.youtube.com/vi/`+isYt+'/mqdefault.jpg'):console.log("Nothing");
+          (isYt && newItemTitle)? setYoutubeId(`http://img.youtube.com/vi/`+isYt+'/sddefault.jpg'):console.log("Nothing");
         }
         },500);
         }

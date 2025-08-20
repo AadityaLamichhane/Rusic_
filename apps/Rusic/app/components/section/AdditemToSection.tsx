@@ -4,16 +4,18 @@ import { Input } from "@/components/ui/input"
 import { Plus } from "lucide-react"
 import { QueueItem } from "./SectionType"
 import { Socket_Sending ,Socket_Sending_type } from "@repo/lib/socketContext"
+import axios from "axios"
 let socketVariable :Socket_Sending = {
     type:Socket_Sending_type.Create_Stream,
 
 }
-export const AddItemToSection = ({newItemTitle , setNewItemTitle ,userSocket,id}:{newItemTitle:string , setNewItemTitle:(params:string)=>void ,userSocket:WebSocket,id:string})=>{
+export  function AddItemToSection  ({newItemTitle , setNewItemTitle ,userSocket,id}:{newItemTitle:string , setNewItemTitle:(params:string)=>void ,userSocket:WebSocket,id:string}){
 // when clicked you can have the loader while having to feth the api 
-  const addItem = () => {
+  const addItem = async() => {
     //   @ts-ignore
     console.log(`this is id ${id}`);
-    socketVariable ={...socketVariable,url:newItemTitle}
+    const responceHeader = await axios.post("")
+    socketVariable ={...socketVariable,url:newItemTitle,sectionId:id}
     userSocket.send(JSON.stringify(socketVariable));
 
     if (!newItemTitle.trim()) return

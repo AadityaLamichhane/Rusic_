@@ -6,31 +6,29 @@ const redisConfig = {
     username:process.env.REDIS_USERNAME,
     database:parseInt(process.env.REDIS_DB ||"0")
 }
- export let client :RedisClientType ; 
+export let pub  :RedisClientType ; 
+export let sub : RedisClientType ;
 export async function initializeRedis(){
     try{
-         client = createClient({
-            socket:{
-                host:redisConfig.host,
-                port:redisConfig.port,
-            },
-            password:redisConfig.password,
-            username:redisConfig.username,
-            database:redisConfig.database
-        })
-        client.on("connect",()=>{
-            console.log('The client is Connectedt to the Redis Application');
+         pub = createClient(redisConfig);
+        pub.on("connect",()=>{
+            console.log('Publisher is in this container ');
         });
-        client.on("messege",async(raw)=>{
-        })
-    await client.connect();
+    await pub.connect();
+    sub = createClient(redisConfig);
+    sub.on("connect",()=>{
+        console.log("Sub is on the way ");
+    });
+  
+    await sub.connect();
     }
     catch(err){
         console.log(err);
     }
 }
+ 
 process.on('SIGINT', async () => {
     console.log('Shutting down gracefully...');
-    await client.quit();
+    await pub.quit();
     process.exit(0);
 });
