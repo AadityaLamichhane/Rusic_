@@ -34,6 +34,7 @@ let isJoined = false ;
     const wss = new WebSocketServer({port:8080});
     wss.on("connection",(socket:any)=>{
         socket.on("message",async(message:string)=>{
+            console.log('messege is incoming',message);
              const messegeJson:Socket_Sending  = JSON.parse(message);
             if(messegeJson.token && messegeJson.type==Socket_Sending_type.Initial_Call){
                 const data = await JoinMessegeHandling(messegeJson.token);
@@ -71,8 +72,8 @@ let isJoined = false ;
                             }
                             break;
                         case Socket_Sending_type.Create_Stream:
-                            // client.set(, )
-                            pub.publish(messegeJson.sectionId ||"",JSON.stringify(messegeJson));
+                            //@ts-ignore
+                            pub.publish(messegeJson.sectionId,JSON.stringify(messegeJson));
                         //   client.hSet(JSON.stringify(messegeJson.sectionId),JSON.stringify(messegeJson.url));
                         
                             console.log("You are trying to create the stream");
@@ -83,6 +84,9 @@ let isJoined = false ;
                         case Socket_Sending_type.Create_Section:
                             console.log('You are trying to create the section');
                             break;
+                            default :
+                            console.log("Error But here is your messege",messegeJson);
+                            return ; 
                     }
             }
     })
@@ -123,7 +127,7 @@ let isJoined = false ;
 }
 let count = 0 ; 
 async function Join_the_section (sectionid:string,userid:string,userName:string,socket:WebSocket){
-    const user  = new User(userName,socket);
+    const user  = new User(userName,socket,userid);
     userIdMapping.set(userid,user);
     if(!sectionMap.get(sectionid) && !sectionsId.includes(sectionid)){
         sectionMap.set(sectionid ,[user]);
@@ -140,13 +144,18 @@ async function Join_the_section (sectionid:string,userid:string,userName:string,
         }
             sub.subscribe(sectionid,async (messege:string)=>{
                 const parsedMessege = await JSON.parse(messege);
+                console.log(parsedMessege);
+                // Make the asynchronous db call to store the data 
+
                 try{
                     const getSections = sectionMap.get(parsedMessege.sectionId);
                     if(getSections!=undefined){
                         for(let i = 0 ; i <getSections?.length; i++){
-                       count++; 
+                            if(getSections[i]!=undefined && getSections[i].socket!=undefined){
+                                //@ts-ignore
+                                getSections[i].socket.send("hello");
+                            }
                         }
-                        console.log(count);
                     }
                 }catch(err){
                     console.log(err);
@@ -159,7 +168,6 @@ async function Join_the_section (sectionid:string,userid:string,userName:string,
         if(usersarray!=undefined){
             console.log("Section already exist");
             sectionMap.set(sectionid ,[...usersarray,user]);
-            console.log(JSON.stringify(sectionMap));
         }else{
             console.log("user array was undefined unexpected behaviour")
             return false ; 
