@@ -8,7 +8,8 @@ import QueueApp from "../../components/SectionInformation"
 import { ExportType ,SectionPageProps } from "@/lib/types";
  let sectionInformation :ExportType={
     isOwner:false , 
-    isSection:false
+    isSection:false,
+  
 }
 export default function Component({params}:SectionPageProps) {
     const [loadingforsection , setLoadingforSection ] = useState(true);
@@ -40,7 +41,7 @@ export default function Component({params}:SectionPageProps) {
           </div>
       </div>
                {(loadingforsection==false && socket && sectionInformation.isSection)?<>
-              <QueueApp userSocket={socket} id={id}>
+              <QueueApp userSocket={socket} id={id} userid={sectionInformation.userid as string}>
               </QueueApp>
                </>:<>
                </>}
