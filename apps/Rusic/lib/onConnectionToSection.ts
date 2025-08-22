@@ -3,19 +3,13 @@ import  prisma from "@repo/db/client"
 import { authOptions } from "@repo/lib";
 import { SessionType } from "@repo/lib/wsenvsetup";
 import { getServerSession } from "next-auth";
-type ExportType = {
-    isOwner:boolean  ,
-    isError?:boolean,
-    AnyError? :String,
-    createdBy?:String
-    isSection:boolean
-}
+import { ExportType } from "./types";
 let exportVariable :ExportType = {
     isOwner:false,
     isError:false,
     AnyError:"",
     isSection:false ,
-    createdBy:""
+    createdBy:"",
 } ; 
 export async function  onConnectionToSection(sectionprops:string ){
     const session = await getServerSession(authOptions);
@@ -25,6 +19,7 @@ export async function  onConnectionToSection(sectionprops:string ){
         return exportVariable;
     }
     const Clientuser = session.user;
+    exportVariable.userid = Clientuser.id;
     if (!Clientuser.id || !Clientuser.name || !Clientuser.email) {
         exportVariable.isError = true
         exportVariable.AnyError = "Invalid session: missing required user properties"
@@ -60,6 +55,4 @@ export async function  onConnectionToSection(sectionprops:string ){
     }
 
 
-
-    return true ; 
 }

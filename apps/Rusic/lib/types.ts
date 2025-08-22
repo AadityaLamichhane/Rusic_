@@ -10,4 +10,5 @@ export type ExportType = {
     AnyError? :String,
     createdBy?:String
     isSection:boolean
+    userid?:string
 }
