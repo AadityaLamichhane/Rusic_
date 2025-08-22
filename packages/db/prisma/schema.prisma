@@ -29,14 +29,14 @@ enum StreamType {
 model Stream{
 
   id      String @unique  @default(uuid())
-  active  Boolean @default(true)
+  active  Boolean @default(false)
   userId  String
-  url     String
-  urlId   String 
+  url     String @unique
+  urlId   String @unique
   upvotes Upvotes[]
   type    StreamType @default(youtube)
   sectionId String 
-  section Section @relation(fields: [sectionId],references: [id])
+  section Section @relation(fields: [sectionId],references: [Sectionname])
   user    User @relation(fields: [userId] ,references: [id])
 
 }
@@ -52,6 +52,6 @@ model Section{
   id        String @default(uuid()) @unique
   createrId String
   stream   Stream[]
-  Sectionname      String 
+  Sectionname      String @unique
   user      User @relation(fields: [createrId], references: [id])
 }
