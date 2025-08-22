@@ -1,15 +1,15 @@
 import { Socket_Sending ,Socket_Sending_type } from "@repo/lib/socketContext";
+import { useRouter } from "next/navigation";
 export const LoadingSectionComponent = ({id,socket,sectionInformation}:{id:string,socket:WebSocket|null,sectionInformation:any})=>{
+    const navigate = useRouter();
     let socketSendingVariable :Socket_Sending  = {
     type:Socket_Sending_type.Initial_Call
     };
     const handleCreateSection =()=> {
       socketSendingVariable.type = Socket_Sending_type.Join_Section;
-      socketSendingVariable.sectionId = id;
+      socketSendingVariable.sectionid = id;
       socket?.send(JSON.stringify(socketSendingVariable));
-      if(socket){
-        // @ts-ignore
-      }
+      window.location.href = ('http://localhost:3000/section/'+id);
 
     }
     return <>

@@ -1,11 +1,9 @@
 "use client"
-
 import { useEffect,  useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ChevronUp, Play, Share2, Plus, Loader } from "lucide-react"
+import { Play, Share2 } from "lucide-react"
 import { youtubeRegex } from "@repo/lib"
 import { AddItemToSection } from "./section/AdditemToSection"
 import { QueueSection } from "./section/QueueSection"
@@ -17,18 +15,16 @@ interface QueueItem {
   addedAt: Date
 }
 const socketSendingVariable:Socket_Sending={type:Socket_Sending_type.Join_Section};
-export default function QueueApp({userSocket,id}:{userSocket:WebSocket,id:string}) {
+export default function QueueApp({userSocket,id,userid}:{userSocket:WebSocket,id:string,userid:string}) {
   useEffect(()=>{
-      socketSendingVariable.sectionId = id;
+      socketSendingVariable.sectionid = id;
       userSocket?.send(JSON.stringify(socketSendingVariable));
   },[])
-      // if(socket){
-        // @ts-ignore
-      // }
+   
   const [currentPlaying, setCurrentPlaying] = useState<QueueItem | null>(null)
   const [newItemTitle, setNewItemTitle] = useState("")
   const [youtubeId,setYoutubeId ]= useState('');
-
+  const videocode = useRef<string>('');
   const debounceTimer = useRef<NodeJS.Timeout| null>(null);
     useEffect(()=>{
       if(newItemTitle=="" && youtubeId!=''){
@@ -43,7 +39,11 @@ export default function QueueApp({userSocket,id}:{userSocket:WebSocket,id:string
             }
           const isYt = newItemTitle.match(youtubeRegex)?.[1];
           console.log(isYt);
-          (isYt && newItemTitle)? setYoutubeId(`http://img.youtube.com/vi/`+isYt+'/sddefault.jpg'):console.log("Nothing");
+          if(isYt && newItemTitle){
+          setYoutubeId(`http://img.youtube.com/vi/`+isYt+'/sddefault.jpg')
+          videocode.current = isYt;
+          }
+          
         }
         },500);
         }
@@ -110,7 +110,7 @@ export default function QueueApp({userSocket,id}:{userSocket:WebSocket,id:string
             )}
           </CardContent>
         </Card>
-        <AddItemToSection newItemTitle = {newItemTitle} setNewItemTitle = {setNewItemTitle} userSocket={userSocket} id={id}>
+        <AddItemToSection newItemTitle = {newItemTitle} setNewItemTitle = {setNewItemTitle} userSocket={userSocket} id={id} userid={userid} urlId={videocode.current}>
         </AddItemToSection>
         </div>
         <div className="flex flex-col gap-8 ">

@@ -9,13 +9,11 @@ let socketVariable :Socket_Sending = {
     type:Socket_Sending_type.Create_Stream,
 
 }
-export  function AddItemToSection  ({newItemTitle , setNewItemTitle ,userSocket,id}:{newItemTitle:string , setNewItemTitle:(params:string)=>void ,userSocket:WebSocket,id:string}){
+export  function AddItemToSection  ({newItemTitle , setNewItemTitle ,userSocket,id,userid,urlId}:{newItemTitle:string , setNewItemTitle:(params:string)=>void ,userSocket:WebSocket,id:string,userid:string,urlId:string}){
 // when clicked you can have the loader while having to feth the api 
   const addItem = async() => {
     //   @ts-ignore
-    console.log(`this is id ${id}`);
-    const responceHeader = await axios.post("")
-    socketVariable ={...socketVariable,url:newItemTitle,sectionId:id}
+    socketVariable ={...socketVariable,url:newItemTitle,sectionid:id,userid:userid,urlid:urlId}
     userSocket.send(JSON.stringify(socketVariable));
 
     if (!newItemTitle.trim()) return
