@@ -12,7 +12,7 @@ import { parse } from "path";
     type : Socket_Sending_type,
     url?: string  ,
     token?: string,
-    sectionId?: string,
+    sectionid?: string,
     msg?:string
  }
 let Soket_SendingVariable: Socket_Sending ={
