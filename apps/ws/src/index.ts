@@ -5,39 +5,39 @@ import prisma from  "@repo/db/client"
 import { pub,sub, initializeRedis } from "./redisconfig";
 import { User , sectionMap ,userSectionMap} from "./UserClass";
 import jwt from 'jsonwebtoken'
- export enum Socket_Sending_type{
-    Stream_Man, 
-    Join_Section,
-    Create_Stream,
-    Initial_Call,
-    Create_Section
- }
+import { Socket_Sending , Socket_Sending_type } from "./type";
+import { JoinMessegeHandling } from "./JoinAuth";
+import { createUser } from "./UserClass";
+// Declaring the variable for the server to hande the users 
+// Todo Make this more clean  
 const users :User[] = [];
 const sectionsId:string[] =[];
 const userIdMapping= new Map<string,User>();
- export type Socket_Sending= {
-    type : Socket_Sending_type,
-    url?: string  ,
-    token?: string,
-    sectionId?: string
-    msg?:String
- }
+
+// For the consistent sending type and clean error handeling 
  let socketSendingVariable: Socket_Sending = {
     type:Socket_Sending_type.Initial_Call,
  }
+
+
+
+// redis
 initializeRedis().then(()=>{
-     ServerHandeling(); 
+     ServerHandeling(); //Redis Stuff
+     Sections(); //Sections Deletion after the server is re initiated
+     loader();  //User Defination
 
 })
 let isJoined = false ; 
  function ServerHandeling(){
+
+    
     const wss = new WebSocketServer({port:8080});
     wss.on("connection",(socket:any)=>{
         socket.on("message",async(message:string)=>{
-            console.log('messege is incoming',message);
              const messegeJson:Socket_Sending  = JSON.parse(message);
             if(messegeJson.token && messegeJson.type==Socket_Sending_type.Initial_Call){
-                const data = await JoinMessegeHandling(messegeJson.token);
+                const data = await JoinMessegeHandling(messegeJson.token,socketSendingVariable);
                 if(data.status){
                     //@ts-ignore
                     socket.id = data.id;
@@ -63,7 +63,7 @@ let isJoined = false ;
                             if(!socket.id){
                                 console.log("you are not authenticated");
                             } 
-                            const sectionCreation = await Join_the_section(messegeJson.sectionId || '' ,socket.id,socket.name,socket);
+                            const sectionCreation = await Join_the_section(messegeJson.sectionid || '' ,socket.id,socket.name,socket);
                             if(sectionCreation==true){
                                 console.log("Your section is Added to the section");
                             }
@@ -72,8 +72,10 @@ let isJoined = false ;
                             }
                             break;
                         case Socket_Sending_type.Create_Stream:
+                            
                             //@ts-ignore
-                            pub.publish(messegeJson.sectionId,JSON.stringify(messegeJson));
+                            pub.publish(messegeJson.sectionid,JSON.stringify({...messegeJson,payload:{type:"create_section"}}));
+                            console.log(`Line number 80${JSON.stringify(messegeJson)}`);
                         //   client.hSet(JSON.stringify(messegeJson.sectionId),JSON.stringify(messegeJson.url));
                         
                             console.log("You are trying to create the stream");
@@ -99,40 +101,14 @@ let isJoined = false ;
     })
 });
  }
- const JoinMessegeHandling= async(token:string)=>{
-    try{
-        // @ts-ignore
-            const decryptedToken = jwt.verify(token,process.env.AUTH_SECRET_WS);
-            if(decryptedToken!=null){
-                const prismaUser = await prisma.user.findFirst({
-                    where:{
-                        //@ts-ignore
-                        id:decryptedToken.id 
-                    }
-                });
-                if(prismaUser==null){
-                    console.log("No such user was found");
-                    socketSendingVariable= {...socketSendingVariable,msg:"fail"}
-                    return {status:false,id:"",name:"Anonymous"} ; 
-                }
-                //@ts-ignore
-                console.log('user confirmed');
-                return {status:true , id:prismaUser.id , name:prismaUser.name} ; 
-            }
-            return {status:false , id:'',name:"Anonymous"};
-    }catch(err){
-            console.log("you are handing the messege");
-            return {status:false , id:'',name:"Anonymous"}; 
-    }
-}
-let count = 0 ; 
+
 async function Join_the_section (sectionid:string,userid:string,userName:string,socket:WebSocket){
-    const user  = new User(userName,socket,userid);
+    // Make the object while joining the  any section
+    const user  = new User(userName,userid,socket);
     userIdMapping.set(userid,user);
     if(!sectionMap.get(sectionid) && !sectionsId.includes(sectionid)){
         sectionMap.set(sectionid ,[user]);
-        console.log(JSON.stringify(sectionMap));
-        console.log("Creating the new Section");
+        try{
         const sectionCreation = await prisma.section.create({
             data:{ 
                 createrId:userid,
@@ -142,16 +118,52 @@ async function Join_the_section (sectionid:string,userid:string,userName:string,
         if(sectionCreation==undefined || sectionCreation==null){
             return false ; 
         }
+        }catch(err){
+            console.log('Error while joining the section');
+            console.log(err);
+            }
+    }else{
+        const usersarray = sectionMap.get(sectionid);
+        if(usersarray!=undefined){
+            console.log("Section already exist");
+            sectionMap.set(sectionid ,[...usersarray,user]);
+        }else{
+            console.log("unexpected behaviour");
+            return false ; 
+        }
+    } 
             sub.subscribe(sectionid,async (messege:string)=>{
                 const parsedMessege = await JSON.parse(messege);
-                console.log(parsedMessege);
+                // This will help to insert only if this is not available in the database
+                 prisma.stream.upsert({
+                    where:{
+                        url:parsedMessege.url,
+                        sectionId:parsedMessege.sectionid,
+                        urlId:parsedMessege.urlid
+                    },
+                    create:{
+                        url:parsedMessege.url,
+                        sectionId:parsedMessege.sectionid,
+                        userId:parsedMessege.userid,
+                        urlId:parsedMessege.urlid,
+                        
+                    },update:{
+// 
+                    }
+                }).then((responce:any)=>{
+                    console.log(responce);
+                    console.log('Done creating the section');
+                }).catch((err:any)=>{
+                    console.log(err);
+                });
                 // Make the asynchronous db call to store the data 
 
                 try{
-                    const getSections = sectionMap.get(parsedMessege.sectionId);
-                    if(getSections!=undefined){
-                        for(let i = 0 ; i <getSections?.length; i++){
-                            if(getSections[i]!=undefined && getSections[i].socket!=undefined){
+                    const getSection = sectionMap.get(parsedMessege.sectionid);
+                    if(getSection!=undefined){
+                        for(let i = 0 ; i <getSection?.length; i++){
+                            if(getSection[i]!=undefined && getSection[i].socket!=undefined){
+                                console.log("socket sending operation after the creation");
                                 //@ts-ignore
                                 getSections[i].socket.send("hello");
                             }
@@ -160,22 +172,23 @@ async function Join_the_section (sectionid:string,userid:string,userName:string,
                 }catch(err){
                     console.log(err);
                 }
-        })
-           return true ;  
-    }else{
-        
-        const usersarray = sectionMap.get(sectionid);
-        if(usersarray!=undefined){
-            console.log("Section already exist");
-            sectionMap.set(sectionid ,[...usersarray,user]);
-        }else{
-            console.log("user array was undefined unexpected behaviour")
-            return false ; 
-        }
-    } 
-    // so the user is subscribing to the section id user:sectioon id and inside this i can do the 
-    }
-    // Supposed to join the Section using the id->hashed ---> mapped to the Users
-    // Users Class names id and So on and so forth which will be handled by this 
-    // Map<token , Users>    Whre Users<user[]> and user = {name and So on filed in the}
+            })
 
+           return true ;  
+    }
+    function loader(){
+    prisma.user.findMany({}).then((cal:any[])=>{
+        for(let i = 0 ; i <cal.length; i++){
+        const induser  = (createUser(cal[i].name,cal[i].id));
+            userIdMapping.set(cal[i].id,induser);
+            console.log(`count${i}`);
+        }
+    }).catch((err:Error)=>{
+        console.log(err);
+    });
+}
+function Sections(){
+    prisma.section.deleteMany({}).then((callback:any)=>{
+        console.log(`Total of ${callback.count} is being deleted `);
+    });
+}
