@@ -1,6 +1,11 @@
 import prisma from "@repo/db/client";
-export async function JoinMessegeHandling(token:string,socketSendingVariable:any):Promise<any>{
+import * as dotenv from "dotenv";
+import jwt from "jsonwebtoken"
+dotenv.config();
+export const JoinMessegeHandling:any = async(token:string,socketSendingVariable:any)=>{
    try{
+    console.log(token );
+    console.log(process.env.AUTH_SECRET_WS);
        // @ts-ignore
            const decryptedToken = jwt.verify(token,process.env.AUTH_SECRET_WS);
            if(decryptedToken!=null){
@@ -21,6 +26,7 @@ export async function JoinMessegeHandling(token:string,socketSendingVariable:any
            }
            return {status:false , id:'',name:"Anonymous"};
    }catch(err){
+            console.log(err);
            console.log("you are handing the messege");
            return {status:false , id:'',name:"Anonymous"}; 
    }
