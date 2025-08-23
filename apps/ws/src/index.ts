@@ -3,11 +3,9 @@ import * as dotenv from "dotenv";
 dotenv.config();
 import prisma from  "@repo/db/client"
 import { pub,sub, initializeRedis } from "./redisconfig";
-import { User , sectionMap ,userSectionMap} from "./UserClass";
-import jwt from 'jsonwebtoken'
+import { User , sectionMap ,userSectionMap , Queue , SectionQueueMap ,createUser,streamQueue } from "./UserClass";
 import { Socket_Sending , Socket_Sending_type } from "./type";
 import { JoinMessegeHandling } from "./JoinAuth";
-import { createUser } from "./UserClass";
 // Declaring the variable for the server to hande the users 
 // Todo Make this more clean  
 const users :User[] = [];
@@ -135,29 +133,45 @@ async function Join_the_section (sectionid:string,userid:string,userName:string,
             sub.subscribe(sectionid,async (messege:string)=>{
                 const parsedMessege = await JSON.parse(messege);
                 // This will help to insert only if this is not available in the database
-                 prisma.stream.upsert({
+                //   id      String @unique  @default(uuid())
+                //   active  Boolean @default(false)
+                //   userId  String
+                //   url     String @unique
+                //   urlId   String @unique
+                //   upvotes Upvotes[]
+                //   type    StreamType @default(youtube)
+                //   sectionId String 
+                //   section Section @relation(fields: [sectionId],references: [Sectionname])
+                //   user    User @relation(fields: [userId] ,references: [id])
+                const findPrisma = await prisma.stream.findFirst({
                     where:{
                         url:parsedMessege.url,
                         sectionId:parsedMessege.sectionid,
-                        urlId:parsedMessege.urlid
-                    },
-                    create:{
-                        url:parsedMessege.url,
-                        sectionId:parsedMessege.sectionid,
-                        userId:parsedMessege.userid,
-                        urlId:parsedMessege.urlid,
-                        
-                    },update:{
-// 
-                    }
-                }).then((responce:any)=>{
-                    console.log(responce);
-                    console.log('Done creating the section');
+                    }});
+                    console.log(findPrisma);
+                    if(findPrisma!=undefined &&  findPrisma!=null){
+                        console.log('Creating the new Stream file');
+                      prisma.stream.create({
+                        data:{
+                        sectionId :parsedMessege.sectionid,
+                            userId:parsedMessege.userid,
+                            urlId:parsedMessege.urlid,
+                            url:parsedMessege.url
+                        }
+                    }).then((responce:any)=>{
+                //   Add the section to Queue Map
+                streamQueue.stream.push({
+                    url:responce.url,
+                    upvotes:0,
+                    createdBy:responce.userId,
+                    section:responce.sectionsId
+                });
+                // Even if it exist or not this will update or create the Sectioon - > StreamQueue 
+                    SectionQueueMap.set(parsedMessege.sectionid,streamQueue)
                 }).catch((err:any)=>{
                     console.log(err);
                 });
                 // Make the asynchronous db call to store the data 
-
                 try{
                     const getSection = sectionMap.get(parsedMessege.sectionid);
                     if(getSection!=undefined){
@@ -165,12 +179,13 @@ async function Join_the_section (sectionid:string,userid:string,userName:string,
                             if(getSection[i]!=undefined && getSection[i].socket!=undefined){
                                 console.log("socket sending operation after the creation");
                                 //@ts-ignore
-                                getSections[i].socket.send("hello");
+                                getSection[i].socket.send("hello");
                             }
                         }
                     }
                 }catch(err){
                     console.log(err);
+                }
                 }
             })
 
@@ -181,14 +196,17 @@ async function Join_the_section (sectionid:string,userid:string,userName:string,
         for(let i = 0 ; i <cal.length; i++){
         const induser  = (createUser(cal[i].name,cal[i].id));
             userIdMapping.set(cal[i].id,induser);
-            console.log(`count${i}`);
+           
         }
     }).catch((err:Error)=>{
         console.log(err);
     });
 }
 function Sections(){
-    prisma.section.deleteMany({}).then((callback:any)=>{
-        console.log(`Total of ${callback.count} is being deleted `);
-    });
+    prisma.stream.deleteMany({}).then((responce:{count:string}|any)=>{
+        console.log('count of the stream Deleted',responce);
+        prisma.section.deleteMany({}).then((callback:any)=>{
+            console.log(`Total of ${callback.count} is being deleted `);
+        });
+    })
 }
