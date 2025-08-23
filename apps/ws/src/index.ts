@@ -63,20 +63,17 @@ let isJoined = false ;
                             } 
                             const sectionCreation = await Join_the_section(messegeJson.sectionid || '' ,socket.id,socket.name,socket);
                             if(sectionCreation==true){
-                                console.log("Your section is Added to the section");
+                                console.log("Added to the section");
                             }
                             else{
                                 console.log("Getting the information from the Sections");
                             }
                             break;
                         case Socket_Sending_type.Create_Stream:
-                            
                             //@ts-ignore
                             pub.publish(messegeJson.sectionid,JSON.stringify({...messegeJson,payload:{type:"create_section"}}));
-                            console.log(`Line number 80${JSON.stringify(messegeJson)}`);
                         //   client.hSet(JSON.stringify(messegeJson.sectionId),JSON.stringify(messegeJson.url));
                         
-                            console.log("You are trying to create the stream");
                             break; 
                         case Socket_Sending_type.Stream_Man:
                             console.log("You are trying to manipulate ");
@@ -120,75 +117,78 @@ async function Join_the_section (sectionid:string,userid:string,userName:string,
             console.log('Error while joining the section');
             console.log(err);
             }
+            sub.subscribe(sectionid,async (messege:string)=>{
+                const parsedMessege = await JSON.parse(messege);
+                if(parsedMessege.payload.type=="create_section"){
+                    const findPrisma = await prisma.stream.findFirst({
+                        where:{
+                            url:parsedMessege.url,
+                            sectionId:parsedMessege.sectionid,
+                        }});
+                        console.log(findPrisma);
+                        if(findPrisma==undefined ||   findPrisma==null){
+                            console.log('Creating the new Stream file');
+                            prisma.stream.create({
+                                data:{
+                                sectionId :parsedMessege.sectionid,
+                                    userId:parsedMessege.userid,
+                                    urlId:parsedMessege.urlid,
+                                    url:parsedMessege.url
+                                }
+                                }).then((responce:any)=>{
+                            //   Add the section to Queue Map
+                         (!streamQueue.stream.find((stream)=>{
+                                stream.url=responce.url;
+                                stream.createdBy=responce.userId;
+                                stream.section=responce.sectionsId;}
+                            ))?
+                            streamQueue.stream.push({
+                                url:responce.url,
+                                upvotes:0,
+                                createdBy:responce.userId,
+                                section:responce.sectionsId
+                            }):console.log("not found");
+                            // Even if it exist or not this will update or create the Sectioon - > StreamQueue 
+                                SectionQueueMap.set(parsedMessege.sectionid,streamQueue)
+                            }).catch((err:any)=>{
+                                console.log(err);
+                            });
+                    // Make the asynchronous db call to store the data 
+                        try{
+                            const getSectionuser = sectionMap.get(parsedMessege.sectionid);
+                            if(getSectionuser!=undefined){
+                                console.log("total setcion user is ",getSectionuser.length);
+                                for(let i = 0 ; i <getSectionuser.length; i++){
+                                    if(getSectionuser[i]!=undefined && getSectionuser[i].socket!=undefined){
+                                        console.log("socket sending operation after the creation");
+                                        
+                                        getSectionuser[i].socket?.send("hello");
+                                    }
+                                }
+                            }
+                        }catch(err){
+                            console.log(err);
+                        }
+                    }
+                    else{//
+
+                        }
+                         }
+            })
+
     }else{
         const usersarray = sectionMap.get(sectionid);
         if(usersarray!=undefined){
-            console.log("Section already exist");
-            sectionMap.set(sectionid ,[...usersarray,user]);
+            // know if the user is already if this user 
+            const isGivenUser = sectionMap.get(sectionid)?.filter((user:User)=>user.id==userid);
+            if(!isGivenUser){
+                sectionMap.set(sectionid ,[...usersarray,user]);
+            }
         }else{
             console.log("unexpected behaviour");
             return false ; 
         }
     } 
-            sub.subscribe(sectionid,async (messege:string)=>{
-                const parsedMessege = await JSON.parse(messege);
-                // This will help to insert only if this is not available in the database
-                //   id      String @unique  @default(uuid())
-                //   active  Boolean @default(false)
-                //   userId  String
-                //   url     String @unique
-                //   urlId   String @unique
-                //   upvotes Upvotes[]
-                //   type    StreamType @default(youtube)
-                //   sectionId String 
-                //   section Section @relation(fields: [sectionId],references: [Sectionname])
-                //   user    User @relation(fields: [userId] ,references: [id])
-                const findPrisma = await prisma.stream.findFirst({
-                    where:{
-                        url:parsedMessege.url,
-                        sectionId:parsedMessege.sectionid,
-                    }});
-                    console.log(findPrisma);
-                    if(findPrisma!=undefined &&  findPrisma!=null){
-                        console.log('Creating the new Stream file');
-                      prisma.stream.create({
-                        data:{
-                        sectionId :parsedMessege.sectionid,
-                            userId:parsedMessege.userid,
-                            urlId:parsedMessege.urlid,
-                            url:parsedMessege.url
-                        }
-                    }).then((responce:any)=>{
-                //   Add the section to Queue Map
-                streamQueue.stream.push({
-                    url:responce.url,
-                    upvotes:0,
-                    createdBy:responce.userId,
-                    section:responce.sectionsId
-                });
-                // Even if it exist or not this will update or create the Sectioon - > StreamQueue 
-                    SectionQueueMap.set(parsedMessege.sectionid,streamQueue)
-                }).catch((err:any)=>{
-                    console.log(err);
-                });
-                // Make the asynchronous db call to store the data 
-                try{
-                    const getSection = sectionMap.get(parsedMessege.sectionid);
-                    if(getSection!=undefined){
-                        for(let i = 0 ; i <getSection?.length; i++){
-                            if(getSection[i]!=undefined && getSection[i].socket!=undefined){
-                                console.log("socket sending operation after the creation");
-                                //@ts-ignore
-                                getSection[i].socket.send("hello");
-                            }
-                        }
-                    }
-                }catch(err){
-                    console.log(err);
-                }
-                }
-            })
-
            return true ;  
     }
     function loader(){
