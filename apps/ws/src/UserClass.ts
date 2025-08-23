@@ -1,4 +1,3 @@
-
 export class User {
     name :string ;
     socket:WebSocket | undefined;
@@ -13,16 +12,20 @@ export class Stream {
     url:string ;
     upvotes: number ;
     createdBy :string ;
-    constructor (url:string , upvotes:number,createdBy:string){
+    section:string; 
+    constructor (url:string , upvotes:number,createdBy:string,section:string){
         this.url = url ; 
         this.upvotes = upvotes;
         this.createdBy = createdBy;
+        this.section = section;
     }
 }
 export class Queue{
     stream:Stream[]=[];
-
-}
+};
+// Initializing the queue as the empty (--initial before making the server)
+export const streamQueue:Queue ={stream:[]}; 
+export const SectionQueueMap = new Map<string,Queue>(); 
 export const sectionMap = new Map<string,User[]>();
 export const userSectionMap = new Map<string,string>();
 export const  createUser  = (name:string,id:string,socket?:WebSocket)=>{
