@@ -14,11 +14,9 @@ const userIdMapping= new Map<string,User>();
 
 // For the consistent sending type and clean error handeling 
  let socketSendingVariable: Socket_Sending = {
+    payload:"res",
     type:Socket_Sending_type.Initial_Call,
  }
-
-
-
 // redis
 initializeRedis().then(()=>{
      ServerHandeling(); //Redis Stuff
@@ -41,12 +39,14 @@ let isJoined = false ;
                     socket.id = data.id;
                     socket.name = data.name;
                     socketSendingVariable = {
+                        ...socketSendingVariable,
                         type:Socket_Sending_type.Initial_Call,
                         msg:"success"
                     }
                     isJoined =true  
                 }else{
                     socketSendingVariable = {
+                        ...socketSendingVariable,
                         type:Socket_Sending_type.Initial_Call,
                         msg:"fail"
                     }
@@ -125,7 +125,6 @@ async function Join_the_section (sectionid:string,userid:string,userName:string,
                             url:parsedMessege.url,
                             sectionId:parsedMessege.sectionid,
                         }});
-                        console.log(findPrisma);
                         if(findPrisma==undefined ||   findPrisma==null){
                             console.log('Creating the new Stream file');
                             prisma.stream.create({
@@ -136,42 +135,14 @@ async function Join_the_section (sectionid:string,userid:string,userName:string,
                                     url:parsedMessege.url
                                 }
                                 }).then((responce:any)=>{
-                            //   Add the section to Queue Map
-                         (!streamQueue.stream.find((stream)=>{
-                                stream.url=responce.url;
-                                stream.createdBy=responce.userId;
-                                stream.section=responce.sectionsId;}
-                            ))?
-                            streamQueue.stream.push({
-                                url:responce.url,
-                                upvotes:0,
-                                createdBy:responce.userId,
-                                section:responce.sectionsId
-                            }):console.log("not found");
-                            // Even if it exist or not this will update or create the Sectioon - > StreamQueue 
-                                SectionQueueMap.set(parsedMessege.sectionid,streamQueue)
+                                SendToConnectedUser(parsedMessege,responce);
                             }).catch((err:any)=>{
                                 console.log(err);
                             });
                     // Make the asynchronous db call to store the data 
-                        try{
-                            const getSectionuser = sectionMap.get(parsedMessege.sectionid);
-                            if(getSectionuser!=undefined){
-                                console.log("total setcion user is ",getSectionuser.length);
-                                for(let i = 0 ; i <getSectionuser.length; i++){
-                                    if(getSectionuser[i]!=undefined && getSectionuser[i].socket!=undefined){
-                                        console.log("socket sending operation after the creation");
-                                        
-                                        getSectionuser[i].socket?.send("hello");
-                                    }
-                                }
-                            }
-                        }catch(err){
-                            console.log(err);
-                        }
                     }
                     else{//
-
+                        // Condition for the stream is Doun in the file 
                         }
                          }
             })
@@ -209,4 +180,37 @@ function Sections(){
             console.log(`Total of ${callback.count} is being deleted `);
         });
     })
+}
+const  SendToConnectedUser = (parsedMessege:any,responce:any)=>{
+(!streamQueue.stream.find((stream)=>{
+            stream.url=responce.url;
+            stream.createdBy=responce.userId;
+            stream.section=responce.sectionsId;}
+        ))?
+        streamQueue.stream.push({
+            url:responce.url,
+            upvotes:0,
+            createdBy:responce.userId,
+                section:responce.sectionsId
+        }):console.log("not found");
+SectionQueueMap.set(parsedMessege.sectionid,streamQueue)
+try{
+    const getSectionuser = sectionMap.get(parsedMessege.sectionid);
+    if(getSectionuser!=undefined){
+        console.log("total setcion user is ",getSectionuser.length);
+        socketSendingVariable= {
+            ...socketSendingVariable,type:Socket_Sending_type.Create_Stream,
+
+        }
+        for(let i = 0 ; i <getSectionuser.length; i++){
+            if(getSectionuser[i]!=undefined && getSectionuser[i].socket!=undefined){
+                console.log("socket sending operation after the creation");
+                
+                getSectionuser[i].socket?.send(JSON.stringify(socketSendingVariable));
+            }
+        }
+    }
+}catch(err){
+    console.log(err);
+}
 }

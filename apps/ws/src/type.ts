@@ -7,6 +7,7 @@
  }
  
  export type Socket_Sending= {
+   payload:"req"| "res",
     type : Socket_Sending_type,
     url?: string  ,
     token?: string,
