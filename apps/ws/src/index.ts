@@ -11,10 +11,12 @@ import { JoinMessegeHandling } from "./JoinAuth";
 const users :User[] = [];
 const sectionsId:string[] =[];
 const userIdMapping= new Map<string,User>();
-
 // For the consistent sending type and clean error handeling 
  let socketSendingVariable: Socket_Sending = {
-    payload:"res",
+    payload:{
+    type:"res",
+    commands:""
+    },
     type:Socket_Sending_type.Initial_Call,
  }
 // redis
@@ -22,12 +24,9 @@ initializeRedis().then(()=>{
      ServerHandeling(); //Redis Stuff
      Sections(); //Sections Deletion after the server is re initiated
      loader();  //User Defination
-
 })
 let isJoined = false ; 
  function ServerHandeling(){
-
-    
     const wss = new WebSocketServer({port:8080});
     wss.on("connection",(socket:any)=>{
         socket.on("message",async(message:string)=>{
@@ -53,7 +52,7 @@ let isJoined = false ;
                 }
                 socket.send(JSON.stringify(socketSendingVariable));
             }
-            else{
+            else if(messegeJson.payload.type=="req"){
                     switch(messegeJson.type){
                         case Socket_Sending_type.Join_Section:
                             // Make the redis call simoultanous
@@ -182,16 +181,15 @@ function Sections(){
     })
 }
 const  SendToConnectedUser = (parsedMessege:any,responce:any)=>{
-(!streamQueue.stream.find((stream)=>{
-            stream.url=responce.url;
-            stream.createdBy=responce.userId;
-            stream.section=responce.sectionsId;}
+        (!streamQueue.stream.find((stream)=>stream.url===responce.url &&
+            stream.createdBy===responce.userId && 
+            stream.section=== responce.sectionId
         ))?
         streamQueue.stream.push({
-            url:responce.url,
+           url:responce.url,
             upvotes:0,
             createdBy:responce.userId,
-                section:responce.sectionsId
+                section:responce.sectionId
         }):console.log("not found");
 SectionQueueMap.set(parsedMessege.sectionid,streamQueue)
 try{
@@ -200,15 +198,21 @@ try{
         console.log("total setcion user is ",getSectionuser.length);
         socketSendingVariable= {
             ...socketSendingVariable,type:Socket_Sending_type.Create_Stream,
-
+            payload:{
+                type:"res",
+                commands:"addQueue"
+            }            ,
+            url:responce.url
         }
         for(let i = 0 ; i <getSectionuser.length; i++){
+            console.log(`This is the socket of the user ${JSON.stringify(getSectionuser[i].id)}`);
+            const socket = userIdMapping.get(getSectionuser[i].id);
+
             if(getSectionuser[i]!=undefined && getSectionuser[i].socket!=undefined){
-                console.log("socket sending operation after the creation");
-                
-                getSectionuser[i].socket?.send(JSON.stringify(socketSendingVariable));
+                socket?.socket?.send(JSON.stringify(socketSendingVariable));
             }
         }
+        console.log(SectionQueueMap.get(parsedMessege.sectionid));
     }
 }catch(err){
     console.log(err);

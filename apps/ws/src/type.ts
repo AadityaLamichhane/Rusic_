@@ -7,7 +7,10 @@
  }
  
  export type Socket_Sending= {
-   payload:"req"| "res",
+   payload:{
+      type:"req"| "res",
+      commands:"addQueue"|"updateQueue"|""
+   },
     type : Socket_Sending_type,
     url?: string  ,
     token?: string,
