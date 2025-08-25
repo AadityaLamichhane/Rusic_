@@ -6,16 +6,27 @@ import { parse } from "path";
     Stream_Man, 
     Join_Section,
     Create_Stream,
-    Initial_Call
+    Initial_Call,
+    Create_Section
  }
+ 
  export type Socket_Sending= {
+   payload:{
+      type:"req"| "res",
+      commands:"addQueue"|"updateQueue"|""
+   },
     type : Socket_Sending_type,
     url?: string  ,
     token?: string,
-    sectionid?: string,
-    msg?:string
+    sectionid?: string
+    msg?:String
+    userid?:string
  }
 let Soket_SendingVariable: Socket_Sending ={
+    payload:{
+        type:"req",
+        commands:""
+    },
     type: Socket_Sending_type.Initial_Call,
     token: "",
     msg:''

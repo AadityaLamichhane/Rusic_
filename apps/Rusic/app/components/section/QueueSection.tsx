@@ -1,14 +1,24 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge, ChevronUp,Play } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { QueueItem } from "./SectionType"
 export function QueueSection({userSocket,setCurrentPlaying}:{userSocket:WebSocket,setCurrentPlaying:any}){
 // queue.lengh
 // sorted Queu
 // playNext
 // Upvote Item
-  const [queue, setQueue] = useState<QueueItem[]>([])
+const [message , setMessage] = useState('');
+  const [queue, setQueue] = useState<QueueItem[]>([]);
+  
+  useEffect(()=>{
+  const handler = (message:MessageEvent)=>{
+      console.log(message.data);
+    }
+    userSocket.addEventListener("message",handler);
+  return () => userSocket.removeEventListener("message", handler);
+  },[]);
+
   const upvoteItem = (id: string) => {
     setQueue((prev) => prev.map((item) => (item.id === id ? { ...item, upvotes: item.upvotes + 1 } : item)))
   }
@@ -44,14 +54,14 @@ return <>
                 <div className="w-12 h-12 mx-auto mb-2 opacity-50 bg-muted rounded-lg flex items-center justify-center">
                   <ChevronUp className="w-6 h-6" />
                 </div>
-                <p>Queue is empty</p>
+                <p>Queue is empty {message}</p>
                 <p className="text-sm">Add some items to get started!</p>
               </div>
             ) : (
               <div className="space-y-3">
                 {sortedQueue.map((item, index) => (
                   <div
-                    key={item.id}
+                    key={item.id} 
                     className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
                   >
                     <div className="flex items-center gap-3">

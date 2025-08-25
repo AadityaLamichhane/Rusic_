@@ -14,12 +14,33 @@ interface QueueItem {
   upvotes: number
   addedAt: Date
 }
-const socketSendingVariable:Socket_Sending={type:Socket_Sending_type.Join_Section};
+const socketSendingVariable:Socket_Sending = {
+  payload:{
+    type:"req",
+    commands:""},
+    type:Socket_Sending_type.Join_Section
+}
 export default function QueueApp({userSocket,id,userid}:{userSocket:WebSocket,id:string,userid:string}) {
   useEffect(()=>{
       socketSendingVariable.sectionid = id;
+      
       userSocket?.send(JSON.stringify(socketSendingVariable));
-  },[])
+      const socketHandler = (message:MessageEvent)=>{
+        console.log(message.data);
+        console.log("comming from the Socket ");
+        //@ts-ignore
+        const parsedMessage = JSON.parse(message.data);
+        console.log(parsedMessage);
+        if(parsedMessage.payload.type=="res"){
+              if(parsedMessage.payload.commands=="addQueue"){
+                console.log("Adding to the queue");
+                console.log(parsedMessage.url)
+              }
+        }
+      }
+      userSocket.addEventListener('message',socketHandler);
+      return ()=>userSocket.removeEventListener('message',socketHandler);
+  },[]);
    
   const [currentPlaying, setCurrentPlaying] = useState<QueueItem | null>(null)
   const [newItemTitle, setNewItemTitle] = useState("")
@@ -115,8 +136,7 @@ export default function QueueApp({userSocket,id,userid}:{userSocket:WebSocket,id
         </div>
         <div className="flex flex-col gap-8 ">
         {/* Queue Section */}
-        {/* @ts-ignore */}
-        <QueueSection usersocket={userSocket} setCurrentPlaying={setCurrentPlaying}></QueueSection>
+        <QueueSection userSocket={userSocket} setCurrentPlaying={setCurrentPlaying}></QueueSection>
         <div className="flex drop-shadow-sm group  ">
           {youtubeId!=""?<>
               <div className="flex justify-center items-center w-full rounded-xl overflow-clip group-hover:scale-105 transition-all duration-200 ease-in-out  ">

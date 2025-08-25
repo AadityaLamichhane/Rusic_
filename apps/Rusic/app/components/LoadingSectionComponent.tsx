@@ -3,6 +3,10 @@ import { useRouter } from "next/navigation";
 export const LoadingSectionComponent = ({id,socket,sectionInformation}:{id:string,socket:WebSocket|null,sectionInformation:any})=>{
     const navigate = useRouter();
     let socketSendingVariable :Socket_Sending  = {
+      payload:{
+        type:"req",
+        commands:""
+      },
     type:Socket_Sending_type.Initial_Call
     };
     const handleCreateSection =()=> {

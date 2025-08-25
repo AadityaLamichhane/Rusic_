@@ -4,10 +4,14 @@ import { Input } from "@/components/ui/input"
 import { Plus } from "lucide-react"
 import { QueueItem } from "./SectionType"
 import { Socket_Sending ,Socket_Sending_type } from "@repo/lib/socketContext"
-import axios from "axios"
+import { useEffect } from "react"
 let socketVariable :Socket_Sending = {
+  payload:{
+    type:"req",
+    commands:""
+  },
     type:Socket_Sending_type.Create_Stream,
-
+    url:""
 }
 export  function AddItemToSection  ({newItemTitle , setNewItemTitle ,userSocket,id,userid,urlId}:{newItemTitle:string , setNewItemTitle:(params:string)=>void ,userSocket:WebSocket,id:string,userid:string,urlId:string}){
 // when clicked you can have the loader while having to feth the api 
@@ -15,7 +19,6 @@ export  function AddItemToSection  ({newItemTitle , setNewItemTitle ,userSocket,
     //   @ts-ignore
     socketVariable ={...socketVariable,url:newItemTitle,sectionid:id,userid:userid,urlid:urlId}
     userSocket.send(JSON.stringify(socketVariable));
-
     if (!newItemTitle.trim()) return
     const newItem: QueueItem = {
       id: Date.now().toString(),
@@ -24,6 +27,7 @@ export  function AddItemToSection  ({newItemTitle , setNewItemTitle ,userSocket,
       addedAt: new Date(),
     }
   }
+
   return( <>
         <Card>
           <CardHeader>
@@ -41,7 +45,7 @@ export  function AddItemToSection  ({newItemTitle , setNewItemTitle ,userSocket,
               />
               <Button onClick={addItem} disabled={!newItemTitle.trim()}>
                 <Plus className="w-4 h-4 mr-2" />
-                Add
+                Add 
               </Button>
             </div>
           </CardContent>
