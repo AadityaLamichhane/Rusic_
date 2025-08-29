@@ -3,24 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge, ChevronUp,Play } from "lucide-react"
 import { useEffect, useState } from "react"
 import { QueueItem } from "./SectionType"
-export function QueueSection({userSocket,setCurrentPlaying}:{userSocket:WebSocket,setCurrentPlaying:any}){
+export function QueueSection({userSocket,setCurrentPlaying,queue,setQueue}:{userSocket:WebSocket,setCurrentPlaying:any,queue:QueueItem[],setQueue:(prev:any)=>void}){
 // queue.lengh
 // sorted Queu
 // playNext
 // Upvote Item
 const [message , setMessage] = useState('');
-  const [queue, setQueue] = useState<QueueItem[]>([]);
-  
-  useEffect(()=>{
-  const handler = (message:MessageEvent)=>{
-      console.log(message.data);
-    }
-    userSocket.addEventListener("message",handler);
-  return () => userSocket.removeEventListener("message", handler);
-  },[]);
-
   const upvoteItem = (id: string) => {
-    setQueue((prev) => prev.map((item) => (item.id === id ? { ...item, upvotes: item.upvotes + 1 } : item)))
+    setQueue((prev:any) => prev.map((item:any) => (item.id === id ? { ...item, upvotes: item.upvotes + 1 } : item)))
   }
 //   To decide what to play next we need to make the request from the frontend but we will have the data and the order collected from the backend
 
@@ -30,8 +20,8 @@ const [message , setMessage] = useState('');
 
     const nextItem = sortedQueue[0];
     if(nextItem!=null){
-    setCurrentPlaying(nextItem)
-    setQueue((prev) => prev.filter((item) => item.id !== nextItem.id))
+    setCurrentPlaying(nextItem);
+    setQueue((prev:QueueItem[]) => prev.filter((item) => item.id !== nextItem.id))
     }else{
         console.log('unexpected error');
         return <></>; 
@@ -62,11 +52,11 @@ return <>
                 {sortedQueue.map((item, index) => (
                   <div
                     key={item.id} 
-                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                    className="relative flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
                   >
                     <div className="flex items-center gap-3">
                         {/* //@ts-ignore */}
-                      <Badge fontVariant={index === 0 ? "default" : "secondary"}>#{index + 1}</Badge>
+                      <img src={'http://img.youtube.com/vi/'+item.id+"/sddefault.jpg"} alt="" className="w-24" />
                       <div>
                         <h4 className="font-medium">{item.title}</h4>
                         <p className="text-sm text-muted-foreground">Added {item.addedAt.toLocaleTimeString()}</p>

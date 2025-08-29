@@ -1,50 +1,39 @@
 "use client"
 import { useEffect,  useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Play, Share2 } from "lucide-react"
+import {  Share2 } from "lucide-react"
 import { youtubeRegex } from "@repo/lib"
 import { AddItemToSection } from "./section/AdditemToSection"
 import { QueueSection } from "./section/QueueSection"
 import { Socket_Sending, Socket_Sending_type } from "@repo/lib/socketContext"
-interface QueueItem {
-  id: string
-  title: string
-  upvotes: number
-  addedAt: Date
-}
+import { QueueItem } from "./section/SectionType"
+import { CurrentPlaying } from "./section/CurrentPlaying"
 const socketSendingVariable:Socket_Sending = {
   payload:{
     type:"req",
-    commands:""},
+    commands:"",
+    videoinfo:{}
+  },
     type:Socket_Sending_type.Join_Section
 }
-export default function QueueApp({userSocket,id,userid}:{userSocket:WebSocket,id:string,userid:string}) {
-  useEffect(()=>{
-      socketSendingVariable.sectionid = id;
-      
-      userSocket?.send(JSON.stringify(socketSendingVariable));
-      const socketHandler = (message:MessageEvent)=>{
-        console.log(message.data);
-        console.log("comming from the Socket ");
-        //@ts-ignore
-        const parsedMessage = JSON.parse(message.data);
-        console.log(parsedMessage);
-        if(parsedMessage.payload.type=="res"){
-              if(parsedMessage.payload.commands=="addQueue"){
-                console.log("Adding to the queue");
-                console.log(parsedMessage.url)
-              }
-        }
-      }
-      userSocket.addEventListener('message',socketHandler);
-      return ()=>userSocket.removeEventListener('message',socketHandler);
-  },[]);
-   
-  const [currentPlaying, setCurrentPlaying] = useState<QueueItem | null>(null)
+export default function QueueApp({userSocket,id,userid,isOwner}:{userSocket:WebSocket,id:string,userid:string,isOwner:boolean}) {
+  const [currentPlaying, setCurrentPlaying] = useState<QueueItem | null>(null);
+  /**
+   If No one is playing any song on queue get the top and play 
+   pseudo code if(currentPlaying==null && Quuee.length >0 ){
+    //  Play the Front of qeueue 
+    // Have one variable storing the current timeline and on the Diff of Total video length and te timeline <= 0 then PlayNext is Triggered
+    // In  the play next get the top of the queue and then push it to the playing component (if Streamer Play the embedded video Automatically and if Not just show them the thumnaoil with playing Emoji on thi s
+    // Have the socket operation on the queue Implementation
+    // if i were to use redux ( Store , Actions (do what ---> Add music == Store .push music Information , On Click the button get the Input value -> store and then Get Access to it using the socket and then Wala, onNext->Update the current playing player to the top of the Quee), Slice(Addmusic , MaintainQueue , GettheInputString* , PlayNext , Delete  )  )
+   }
+   */ 
+
   const [newItemTitle, setNewItemTitle] = useState("")
   const [youtubeId,setYoutubeId ]= useState('');
+  const [buttonLoading , setButtonLoading] = useState<boolean>(false);
+  const [queue,setQueue]= useState<QueueItem[]>([]);
+  console.log(queue);
   const videocode = useRef<string>('');
   const debounceTimer = useRef<NodeJS.Timeout| null>(null);
     useEffect(()=>{
@@ -64,7 +53,6 @@ export default function QueueApp({userSocket,id,userid}:{userSocket:WebSocket,id
           setYoutubeId(`http://img.youtube.com/vi/`+isYt+'/sddefault.jpg')
           videocode.current = isYt;
           }
-          
         }
         },500);
         }
@@ -73,7 +61,49 @@ export default function QueueApp({userSocket,id,userid}:{userSocket:WebSocket,id
             clearTimeout(debounceTimer.current);
           }
         }
-    },[newItemTitle])
+    },[newItemTitle]);
+    // Ws Application
+  useEffect(()=>{
+      socketSendingVariable.sectionid = id;
+      userSocket?.send(JSON.stringify(socketSendingVariable));
+      const socketHandler = async(message:MessageEvent)=>{
+        console.log(message.data);
+        console.log("comming from the Socket ");
+        //@ts-ignore
+        const parsedMessage = JSON.parse(message.data);
+        console.log(`thisis the stringify message ${JSON.stringify(parsedMessage.payload.type)}`);
+        console.log(`This is the parded Messge ${JSON.stringify(parsedMessage.payload.videoInfo.url)}`)
+        if(parsedMessage.payload.type=="res"){
+              if(parsedMessage.payload.commands=="addQueue"){
+                    const newStream = {
+                      id: parsedMessage.payload.videoInfo.videoId,
+                      title: parsedMessage.payload.videoInfo.title,
+                      upvotes:0,
+                      addedAt:  new Date(),
+                      url:parsedMessage.payload.videoInfo.url
+                    };
+                    console.log("This is the url ")
+                setYoutubeId('')
+                setNewItemTitle('')
+                setQueue((prevQueue)=>{
+                setButtonLoading(false);
+                  if(prevQueue.length==0){
+                    return [newStream]
+                  }else{
+                    if(prevQueue.find((pastQueue)=>newStream.id==pastQueue.id)){
+                     return prevQueue 
+                    }
+                    return [...prevQueue,newStream]
+                  }
+      
+                })
+              
+                console.log(parsedMessage.url)
+              }
+        }
+      }
+      userSocket.addEventListener('message',socketHandler);
+  },[]);
     const shareQueue = async () => {
       try {
         await navigator.share({
@@ -85,7 +115,6 @@ export default function QueueApp({userSocket,id,userid}:{userSocket:WebSocket,id
         await navigator.clipboard.writeText(window.location.href)
       }
     }
-
 
   return (
     <div className="min-h-screen bg-background p-4">
@@ -105,38 +134,13 @@ export default function QueueApp({userSocket,id,userid}:{userSocket:WebSocket,id
         {/* Now Playing Section */}
         {/* Add Item Section */}
         <div className="flex flex-col gap-8">
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Play className="w-5 h-5" />
-              Now Playing
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {currentPlaying ? (
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold">{currentPlaying.title}</h3>
-                  <p className="text-sm text-muted-foreground">Final score: {currentPlaying.upvotes} upvotes</p>
-                </div>
-                <Badge variant="secondary">Playing</Badge>
-              </div>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <Play className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                <p>Nothing playing yet</p>
-                <p className="text-sm">Add items to the queue and play the next one!</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-        <AddItemToSection newItemTitle = {newItemTitle} setNewItemTitle = {setNewItemTitle} userSocket={userSocket} id={id} userid={userid} urlId={videocode.current}>
+        <CurrentPlaying currentPlaying={currentPlaying} isOwner={isOwner}></CurrentPlaying>
+        <AddItemToSection newItemTitle = {newItemTitle} SetButtonLoading={setButtonLoading} setNewItemTitle = {setNewItemTitle} userSocket={userSocket} id={id} userid={userid} urlId={videocode.current}  buttonLoading={buttonLoading}>
         </AddItemToSection>
         </div>
         <div className="flex flex-col gap-8 ">
         {/* Queue Section */}
-        <QueueSection userSocket={userSocket} setCurrentPlaying={setCurrentPlaying}></QueueSection>
+        <QueueSection userSocket={userSocket} setCurrentPlaying={setCurrentPlaying} queue={queue} setQueue={setQueue}></QueueSection>
         <div className="flex drop-shadow-sm group  ">
           {youtubeId!=""?<>
               <div className="flex justify-center items-center w-full rounded-xl overflow-clip group-hover:scale-105 transition-all duration-200 ease-in-out  ">

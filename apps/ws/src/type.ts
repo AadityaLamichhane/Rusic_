@@ -10,6 +10,7 @@
    payload:{
       type:"req"| "res",
       commands:"addQueue"|"updateQueue"|""
+      videoInfo?:{}
    },
     type : Socket_Sending_type,
     url?: string  ,

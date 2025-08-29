@@ -3,4 +3,6 @@ export interface QueueItem {
   title: string
   upvotes: number
   addedAt: Date
+  url:string
+  
 }

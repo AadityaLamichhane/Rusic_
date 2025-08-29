@@ -6,6 +6,8 @@ import { pub,sub, initializeRedis } from "./redisconfig";
 import { User , sectionMap ,userSectionMap , Queue , SectionQueueMap ,createUser,streamQueue } from "./UserClass";
 import { Socket_Sending , Socket_Sending_type } from "./type";
 import { JoinMessegeHandling } from "./JoinAuth";
+import axios from "axios"
+import { title } from "process";
 // Declaring the variable for the server to hande the users 
 // Todo Make this more clean  
 const users :User[] = [];
@@ -15,7 +17,8 @@ const userIdMapping= new Map<string,User>();
  let socketSendingVariable: Socket_Sending = {
     payload:{
     type:"res",
-    commands:""
+    commands:"",
+    
     },
     type:Socket_Sending_type.Initial_Call,
  }
@@ -134,6 +137,7 @@ async function Join_the_section (sectionid:string,userid:string,userName:string,
                                     url:parsedMessege.url
                                 }
                                 }).then((responce:any)=>{
+                                    console.log(responce);
                                 SendToConnectedUser(parsedMessege,responce);
                             }).catch((err:any)=>{
                                 console.log(err);
@@ -191,27 +195,36 @@ const  SendToConnectedUser = (parsedMessege:any,responce:any)=>{
             createdBy:responce.userId,
                 section:responce.sectionId
         }):console.log("not found");
-SectionQueueMap.set(parsedMessege.sectionid,streamQueue)
+SectionQueueMap.set(parsedMessege.sectionid,streamQueue);
+
 try{
     const getSectionuser = sectionMap.get(parsedMessege.sectionid);
     if(getSectionuser!=undefined){
         console.log("total setcion user is ",getSectionuser.length);
+
+        axios.post("http://localhost:3000/api/stream",{url:responce.url}).then((responce)=>{
+console.log(JSON.stringify(responce.data));
         socketSendingVariable= {
             ...socketSendingVariable,type:Socket_Sending_type.Create_Stream,
             payload:{
                 type:"res",
-                commands:"addQueue"
+                commands:"addQueue",
+                videoInfo:{
+                    title:responce.data.videoinfo.title,
+                    channelTitle:responce.data.videoinfo.channel,
+                    videoId:responce.data.videoinfo.id
+                }
             }            ,
-            url:responce.url
         }
-        for(let i = 0 ; i <getSectionuser.length; i++){
-            console.log(`This is the socket of the user ${JSON.stringify(getSectionuser[i].id)}`);
-            const socket = userIdMapping.get(getSectionuser[i].id);
-
-            if(getSectionuser[i]!=undefined && getSectionuser[i].socket!=undefined){
-                socket?.socket?.send(JSON.stringify(socketSendingVariable));
+            if(JSON.stringify(responce.status)[0] == '2'){
+                for(let i = 0 ; i <getSectionuser.length; i++){
+                    const socket = userIdMapping.get(getSectionuser[i].id);
+                    if(getSectionuser[i]!=undefined && getSectionuser[i].socket!=undefined){
+                        socket?.socket?.send(JSON.stringify(socketSendingVariable));
+                    }
             }
-        }
+            }
+        })
         console.log(SectionQueueMap.get(parsedMessege.sectionid));
     }
 }catch(err){

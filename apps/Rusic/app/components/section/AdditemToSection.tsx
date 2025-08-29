@@ -4,7 +4,6 @@ import { Input } from "@/components/ui/input"
 import { Plus } from "lucide-react"
 import { QueueItem } from "./SectionType"
 import { Socket_Sending ,Socket_Sending_type } from "@repo/lib/socketContext"
-import { useEffect } from "react"
 let socketVariable :Socket_Sending = {
   payload:{
     type:"req",
@@ -13,9 +12,9 @@ let socketVariable :Socket_Sending = {
     type:Socket_Sending_type.Create_Stream,
     url:""
 }
-export  function AddItemToSection  ({newItemTitle , setNewItemTitle ,userSocket,id,userid,urlId}:{newItemTitle:string , setNewItemTitle:(params:string)=>void ,userSocket:WebSocket,id:string,userid:string,urlId:string}){
+export  function AddItemToSection  ({newItemTitle , setNewItemTitle ,userSocket,id,userid,urlId,SetButtonLoading,buttonLoading}:{newItemTitle:string , setNewItemTitle:(params:string)=>void ,userSocket:WebSocket,id:string,userid:string,urlId:string,SetButtonLoading:(varriable:boolean)=>void,buttonLoading:boolean}){
 // when clicked you can have the loader while having to feth the api 
-  const addItem = async() => {
+  const addItem =() => {
     //   @ts-ignore
     socketVariable ={...socketVariable,url:newItemTitle,sectionid:id,userid:userid,urlid:urlId}
     userSocket.send(JSON.stringify(socketVariable));
@@ -25,6 +24,7 @@ export  function AddItemToSection  ({newItemTitle , setNewItemTitle ,userSocket,
       title: newItemTitle.trim(),
       upvotes: 0,
       addedAt: new Date(),
+      url:""
     }
   }
 
@@ -43,7 +43,10 @@ export  function AddItemToSection  ({newItemTitle , setNewItemTitle ,userSocket,
                   setNewItemTitle(e.target.value)}}
                 className="flex-1"
               />
-              <Button onClick={addItem} disabled={!newItemTitle.trim()}>
+              <Button onClick={()=>{
+                addItem();
+                SetButtonLoading(true);
+                }} >
                 <Plus className="w-4 h-4 mr-2" />
                 Add 
               </Button>

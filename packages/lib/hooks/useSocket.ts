@@ -13,7 +13,9 @@ import { parse } from "path";
  export type Socket_Sending= {
    payload:{
       type:"req"| "res",
-      commands:"addQueue"|"updateQueue"|""
+      commands:"addQueue"|"updateQueue"|"",
+        videoinfo?:{}
+
    },
     type : Socket_Sending_type,
     url?: string  ,
@@ -25,7 +27,8 @@ import { parse } from "path";
 let Soket_SendingVariable: Socket_Sending ={
     payload:{
         type:"req",
-        commands:""
+        commands:"",
+        videoinfo:{}
     },
     type: Socket_Sending_type.Initial_Call,
     token: "",

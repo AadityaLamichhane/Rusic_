@@ -41,7 +41,7 @@ export default function Component({params}:SectionPageProps) {
           </div>
       </div>
                {(loadingforsection==false && socket && sectionInformation.isSection)?<>
-              <QueueApp userSocket={socket} id={id} userid={sectionInformation.userid as string}>
+              <QueueApp userSocket={socket} id={id} userid={sectionInformation.userid  as string} isOwner={sectionInformation.isOwner}>
               </QueueApp>
                </>:<>
                </>}

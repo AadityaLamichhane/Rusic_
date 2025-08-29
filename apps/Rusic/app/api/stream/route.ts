@@ -19,7 +19,7 @@ const CreateStreamSchem = z.object({
             if (!isYt || !videoId) {
                 return NextResponse.json(
                     {
-                    message: "Invalid YouTube URL format",
+                    msg: "Invalid YouTube URL format",
                     },
                     {
                     status: 400,

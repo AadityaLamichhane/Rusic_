@@ -32,13 +32,14 @@ model Stream{
   active  Boolean @default(false)
   userId  String
   url     String 
-  urlId   String @unique
+  urlId   String 
   upvotes Upvotes[]
   type    StreamType @default(youtube)
   sectionId String 
   section Section @relation(fields: [sectionId],references: [Sectionname])
   user    User @relation(fields: [userId] ,references: [id])
 @@unique([url,sectionId])
+@@unique([urlId,sectionId])
 }
 model Upvotes{
   id        String @default(uuid()) @unique
