@@ -8,6 +8,9 @@ import { QueueSection } from "./section/QueueSection"
 import { Socket_Sending, Socket_Sending_type } from "@repo/lib/socketContext"
 import { QueueItem } from "./section/SectionType"
 import { CurrentPlaying } from "./section/CurrentPlaying"
+import { useDispatch } from "react-redux"
+import { useAppDispatch } from "./store/hooks"
+import { addQueue } from "./store/slice/QueueSlice"
 const socketSendingVariable:Socket_Sending = {
   payload:{
     type:"req",
@@ -28,7 +31,7 @@ export default function QueueApp({userSocket,id,userid,isOwner}:{userSocket:WebS
     // if i were to use redux ( Store , Actions (do what ---> Add music == Store .push music Information , On Click the button get the Input value -> store and then Get Access to it using the socket and then Wala, onNext->Update the current playing player to the top of the Quee), Slice(Addmusic , MaintainQueue , GettheInputString* , PlayNext , Delete  )  )
    }
    */ 
-
+const queueapplication = useAppDispatch()
   const [newItemTitle, setNewItemTitle] = useState("")
   const [youtubeId,setYoutubeId ]= useState('');
   const [buttonLoading , setButtonLoading] = useState<boolean>(false);
@@ -67,24 +70,21 @@ export default function QueueApp({userSocket,id,userid,isOwner}:{userSocket:WebS
       socketSendingVariable.sectionid = id;
       userSocket?.send(JSON.stringify(socketSendingVariable));
       const socketHandler = async(message:MessageEvent)=>{
-        console.log(message.data);
-        console.log("comming from the Socket ");
         //@ts-ignore
         const parsedMessage = JSON.parse(message.data);
-        console.log(`thisis the stringify message ${JSON.stringify(parsedMessage.payload.type)}`);
-        console.log(`This is the parded Messge ${JSON.stringify(parsedMessage.payload.videoInfo.url)}`)
+        const CurrentTime = new Date().toLocaleTimeString()
         if(parsedMessage.payload.type=="res"){
               if(parsedMessage.payload.commands=="addQueue"){
                     const newStream = {
                       id: parsedMessage.payload.videoInfo.videoId,
                       title: parsedMessage.payload.videoInfo.title,
                       upvotes:0,
-                      addedAt:  new Date(),
+                      addedAt:CurrentTime,
                       url:parsedMessage.payload.videoInfo.url
                     };
-                    console.log("This is the url ")
                 setYoutubeId('')
                 setNewItemTitle('')
+                queueapplication(addQueue(newStream));
                 setQueue((prevQueue)=>{
                 setButtonLoading(false);
                   if(prevQueue.length==0){

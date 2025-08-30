@@ -23,7 +23,7 @@ export  function AddItemToSection  ({newItemTitle , setNewItemTitle ,userSocket,
       id: Date.now().toString(),
       title: newItemTitle.trim(),
       upvotes: 0,
-      addedAt: new Date(),
+      addedAt:  new Date().toLocaleTimeString(),
       url:""
     }
   }

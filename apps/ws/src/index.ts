@@ -200,10 +200,7 @@ SectionQueueMap.set(parsedMessege.sectionid,streamQueue);
 try{
     const getSectionuser = sectionMap.get(parsedMessege.sectionid);
     if(getSectionuser!=undefined){
-        console.log("total setcion user is ",getSectionuser.length);
-
-        axios.post("http://localhost:3000/api/stream",{url:responce.url}).then((responce)=>{
-console.log(JSON.stringify(responce.data));
+              axios.post("http://localhost:3000/api/stream",{url:responce.url}).then((responce)=>{
         socketSendingVariable= {
             ...socketSendingVariable,type:Socket_Sending_type.Create_Stream,
             payload:{
@@ -212,8 +209,10 @@ console.log(JSON.stringify(responce.data));
                 videoInfo:{
                     title:responce.data.videoinfo.title,
                     channelTitle:responce.data.videoinfo.channel,
-                    videoId:responce.data.videoinfo.id
-                }
+                    videoId:responce.data.videoinfo.id,
+                    url:responce.data.videoUrl
+                },
+                
             }            ,
         }
             if(JSON.stringify(responce.status)[0] == '2'){

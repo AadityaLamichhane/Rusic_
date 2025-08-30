@@ -3,25 +3,24 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge, ChevronUp,Play } from "lucide-react"
 import { useEffect, useState } from "react"
 import { QueueItem } from "./SectionType"
-export function QueueSection({userSocket,setCurrentPlaying,queue,setQueue}:{userSocket:WebSocket,setCurrentPlaying:any,queue:QueueItem[],setQueue:(prev:any)=>void}){
+import { useAppSelector } from "../store/hooks"
+export function QueueSection({userSocket,setCurrentPlaying}:{userSocket:WebSocket,setCurrentPlaying:any}){
 // queue.lengh
 // sorted Queu
 // playNext
 // Upvote Item
 const [message , setMessage] = useState('');
   const upvoteItem = (id: string) => {
-    setQueue((prev:any) => prev.map((item:any) => (item.id === id ? { ...item, upvotes: item.upvotes + 1 } : item)))
   }
 //   To decide what to play next we need to make the request from the frontend but we will have the data and the order collected from the backend
-
-  const sortedQueue = [...queue].sort((a, b) => b.upvotes - a.upvotes)
+const QueueSelector = useAppSelector((state)=>state.Queue);
+  const sortedQueue = [...QueueSelector].sort((a, b) => b.upvotes - a.upvotes)
   const playNext = () => {
     if (sortedQueue.length === 0) return
 
     const nextItem = sortedQueue[0];
     if(nextItem!=null){
     setCurrentPlaying(nextItem);
-    setQueue((prev:QueueItem[]) => prev.filter((item) => item.id !== nextItem.id))
     }else{
         console.log('unexpected error');
         return <></>; 
@@ -30,11 +29,11 @@ const [message , setMessage] = useState('');
 return <>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Queue ({queue.length} items)</CardTitle>
+            <CardTitle>Queue ({QueueSelector.length} items)</CardTitle>
             {sortedQueue.length > 0 && (
               <Button onClick={playNext} size="sm">
                 <Play className="w-4 h-4 mr-2" />
-                Play Next
+                Play Next 
               </Button>
             )}
           </CardHeader>
@@ -49,9 +48,10 @@ return <>
               </div>
             ) : (
               <div className="space-y-3">
-                {sortedQueue.map((item, index) => (
+                {QueueSelector.map((item, index) => (
                   <div
-                    key={item.id} 
+                    key={index}
+                     
                     className="relative flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
                   >
                     <div className="flex items-center gap-3">
@@ -59,7 +59,7 @@ return <>
                       <img src={'http://img.youtube.com/vi/'+item.id+"/sddefault.jpg"} alt="" className="w-24" />
                       <div>
                         <h4 className="font-medium">{item.title}</h4>
-                        <p className="text-sm text-muted-foreground">Added {item.addedAt.toLocaleTimeString()}</p>
+                        <p className="text-sm text-muted-foreground">Added {item.addedAt}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
