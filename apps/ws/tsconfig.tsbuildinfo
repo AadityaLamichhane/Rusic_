@@ -1,1 +1,1 @@
-{"root":["./src/JoinAuth.ts","./src/UserClass.ts","./src/index.ts","./src/redisconfig.ts","./src/serverhandling.ts","./src/type.ts"],"version":"5.8.3"}
+{"root":["./src/JoinAuth.ts","./src/UserClass.ts","./src/index.ts","./src/redisconfig.ts","./src/serverhandling.ts","./src/type.ts","./src/redis/SectionSubHandler.ts","./src/stream/createStream.ts","./src/stream/sendStreamState.ts","./src/useraction/Sendtoconnected.ts"],"version":"5.8.3"}

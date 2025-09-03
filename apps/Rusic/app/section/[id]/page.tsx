@@ -25,6 +25,9 @@ export default function Component({params}:SectionPageProps) {
             setLoadingforSection(false);
           }
          });
+         return ()=>{
+          socket?.close();
+        }
     },[]);
     if(loading){
         return <>

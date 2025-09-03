@@ -8,7 +8,6 @@ import { QueueSection } from "./section/QueueSection"
 import { Socket_Sending, Socket_Sending_type } from "@repo/lib/socketContext"
 import { QueueItem } from "./section/SectionType"
 import { CurrentPlaying } from "./section/CurrentPlaying"
-import { useDispatch } from "react-redux"
 import { useAppDispatch } from "./store/hooks"
 import { addQueue } from "./store/slice/QueueSlice"
 const socketSendingVariable:Socket_Sending = {
@@ -35,8 +34,6 @@ const queueapplication = useAppDispatch()
   const [newItemTitle, setNewItemTitle] = useState("")
   const [youtubeId,setYoutubeId ]= useState('');
   const [buttonLoading , setButtonLoading] = useState<boolean>(false);
-  const [queue,setQueue]= useState<QueueItem[]>([]);
-  console.log(queue);
   const videocode = useRef<string>('');
   const debounceTimer = useRef<NodeJS.Timeout| null>(null);
     useEffect(()=>{
@@ -72,7 +69,7 @@ const queueapplication = useAppDispatch()
       const socketHandler = async(message:MessageEvent)=>{
         //@ts-ignore
         const parsedMessage = JSON.parse(message.data);
-        const CurrentTime = new Date().toLocaleTimeString()
+        const CurrentTime = new Date().toLocaleTimeString();
         if(parsedMessage.payload.type=="res"){
               if(parsedMessage.payload.commands=="addQueue"){
                     const newStream = {
@@ -82,27 +79,19 @@ const queueapplication = useAppDispatch()
                       addedAt:CurrentTime,
                       url:parsedMessage.payload.videoInfo.url
                     };
-                setYoutubeId('')
-                setNewItemTitle('')
+                setYoutubeId('');
+                console.log(newStream);
+                setNewItemTitle('');
                 queueapplication(addQueue(newStream));
-                setQueue((prevQueue)=>{
-                setButtonLoading(false);
-                  if(prevQueue.length==0){
-                    return [newStream]
-                  }else{
-                    if(prevQueue.find((pastQueue)=>newStream.id==pastQueue.id)){
-                     return prevQueue 
-                    }
-                    return [...prevQueue,newStream]
-                  }
-      
-                })
-              
+                // Have the call to the pub Sub about adding the stream
+                // Have the status of the request and respond according to the rqeust
+
                 console.log(parsedMessage.url)
               }
         }
       }
       userSocket.addEventListener('message',socketHandler);
+      return ()=>userSocket.removeEventListener('message',socketHandler);
   },[]);
     const shareQueue = async () => {
       try {
@@ -140,7 +129,7 @@ const queueapplication = useAppDispatch()
         </div>
         <div className="flex flex-col gap-8 ">
         {/* Queue Section */}
-        <QueueSection userSocket={userSocket} setCurrentPlaying={setCurrentPlaying} queue={queue} setQueue={setQueue}></QueueSection>
+        <QueueSection userSocket={userSocket} setCurrentPlaying={setCurrentPlaying} ></QueueSection>
         <div className="flex drop-shadow-sm group  ">
           {youtubeId!=""?<>
               <div className="flex justify-center items-center w-full rounded-xl overflow-clip group-hover:scale-105 transition-all duration-200 ease-in-out  ">
