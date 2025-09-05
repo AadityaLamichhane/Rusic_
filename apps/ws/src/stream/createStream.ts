@@ -13,7 +13,6 @@ export async function createStream (parsedMessege:Socket_Sending){
                             sectionId:parsedMessege.sectionid,
                         }});
                         if(findPrisma==undefined ||   findPrisma==null){
-                            console.log('Creating the new Stream file');
                             prisma.stream.create({
                                 data:{
                                 sectionId :parsedMessege.sectionid,
@@ -23,17 +22,9 @@ export async function createStream (parsedMessege:Socket_Sending){
                                 }
                                 }).then((responce:any)=>{
                                     console.log(responce);
-                                    //Update the inmemory 
-                                    // const streamQueue = Section_Id_To_QueueMap.get(parsedMessege.sectionid??"default");
-                                    // if(streamQueue==undefined ){
-                                    //     console.log("The stream Queue is Undefined");
-                                    //     return {status:"failed"} ; 
-                                    // }
-                                    // streamQueue.stream.push(newStream)
-                                    // Section_Id_To_QueueMap.set(parsedMessege.sectionid??"default",streamQueue);
-                                    //Update the redis Memory 
-                                   
-                                    SendToConnectedUser(parsedMessege.sectionid,responce);
+                                  
+                                    console.log('Calling the send to user');
+                                    SendToConnectedUser(responce);
                                 return {status:"success"}
                             }).catch((err:any)=>{
                                 console.log(err);

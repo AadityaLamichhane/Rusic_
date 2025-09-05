@@ -27,6 +27,7 @@ export class StorageClass {
     async getQueue(sectionId:string){
         const index_idPair  = await  this.redis.zRangeByScore(`section:${sectionId}:sortedItems`,0,1);
         const items: Stream[]=[];
+        console.log('getting the queue');
         for(const index of index_idPair){
             const Item = await this.redis.hGet(`section:${sectionId}:queueItems`,index);
             items.push(JSON.parse(Item??""));

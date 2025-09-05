@@ -1,8 +1,10 @@
 import { Section_Id_To_QueueMap,sectionMap} from "../UserClass";
 import axios from "axios";
+import { Stream } from "../UserClass";
 import { userIdMapping } from "..";
 import { Socket_Sending,Socket_Sending_type } from "./../type";
-import type {Stream} from "@prisma/client"
+
+export const  SendToConnectedUser = (dbResponce:any)=>{
 let Socket_Sending_variable :Socket_Sending = {
      payload: {
         type: "res",
@@ -10,16 +12,19 @@ let Socket_Sending_variable :Socket_Sending = {
     },
     type: Socket_Sending_type.Stream_Man
 }
-export const  SendToConnectedUser = (dbResponce:any)=>{
-    console.log("Sending To Each User");
 try{
     const getSectionuser = sectionMap.get(dbResponce.sectionId);
     if(getSectionuser!=undefined){
               axios.post("http://localhost:3000/api/stream",{url:dbResponce.url}).then((axiosresponce)=>{
 
-            const queue_In_SectionId =Section_Id_To_QueueMap.get(dbResponce.sectionId);
+            if(!Section_Id_To_QueueMap.has(dbResponce.sectionId)){
+                console.log('Dont have the token yet ');
+                Section_Id_To_QueueMap.set(dbResponce.sectionId,[]);
+            }
+            const queue_In_SectionId=Section_Id_To_QueueMap.get(dbResponce.sectionId);
+            console.log(`This is tthe Queue in the inmemory ${JSON.stringify(queue_In_SectionId)}`);
             if(queue_In_SectionId==undefined){
-                return false; 
+                return new Error();
             }
             (!queue_In_SectionId.find((stream)=>stream.url===dbResponce.url &&
                 stream.createdBy===dbResponce.userId && 
@@ -35,9 +40,11 @@ try{
                 videoId:axiosresponce.data.videoinfo.id,
                 url:axiosresponce.data.videoUrl
                 }):console.log("not found");
-                Section_Id_To_QueueMap.set(dbResponce.sectionId,queue_In_SectionId);
+            
+            Section_Id_To_QueueMap.set(dbResponce.sectionId,queue_In_SectionId);
 
 // 
+            
             Socket_Sending_variable= {
                 ...Socket_Sending_variable,type:Socket_Sending_type.Create_Stream,
                 payload:{
@@ -51,6 +58,7 @@ try{
                     },
                 }
             }
+          
                 console.log(`This is the length of the user in the section : ${getSectionuser.length}`);
                 for(let i = 0 ; i <getSectionuser.length; i++){
                     const idMappedUser= userIdMapping.get(getSectionuser[i].id);

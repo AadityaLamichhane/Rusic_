@@ -31,7 +31,7 @@ export class Stream {
 
 // Initializing the queue as the empty (--initial before making the server)
 
-export const Section_Id_To_QueueMap = new Map<string,Stream[]>(); 
+export const Section_Id_To_QueueMap = new Map<string,Stream[]>([]); 
 export const sectionMap = new Map<string,User[]>();
 export const  createUser  = (name:string,id:string,socket?:WebSocket)=>{
     if(socket!=undefined){

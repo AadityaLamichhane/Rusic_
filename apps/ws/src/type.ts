@@ -11,6 +11,7 @@ import { Stream } from "./UserClass"
  export type Socket_Sending= {
    payload:{
       type:"req"| "res",
+     
       commands:"addQueue"|"updateQueue"| "" |"GetState"
       videoInfo?:{
                   urlId?:string
@@ -29,4 +30,3 @@ import { Stream } from "./UserClass"
  }
 
 
-export type StreamWithInformation 

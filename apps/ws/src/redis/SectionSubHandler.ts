@@ -12,9 +12,10 @@ export async function Section_Subhandler(messege:string){
                     await createStream(parsedMessege);
                     
                 }else if(parsedMessege.payload.commands=="GetState"){
-                    sendStreamState(parsedMessege);
-                    const data = await SectionStorage.getQueue(parsedMessege.sectionid??'defaultSection');
-                    console.log(data);
+                    console.log('Getting the get State')
+                   const value =  await SectionStorage.getQueue(parsedMessege.sectionid??"");
+                   console.log(JSON.stringify(value));
+
                     // Get the stream information from the map object of the queue 
                     // Get the stream and then populatr to the user 
                     // Get From the local storeage / assigned Id   / payload 

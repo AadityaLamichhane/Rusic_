@@ -7,7 +7,7 @@ dotenv.config();
 export const JoinMessegeHandling:any = async(token:string,socketSendingVariable:any,socket:WebSocket)=>{
    try{
        // @ts-ignore
-           const decryptedToken = jwt.verify(token,process.env.AUTH_SECRET_WS);
+           const decryptedToken =  jwt.verify(token,process.env.AUTH_SECRET_WS);
            if(decryptedToken==null && decryptedToken==undefined){
             console.log("Cannot Continue ");
 
@@ -24,12 +24,11 @@ export const JoinMessegeHandling:any = async(token:string,socketSendingVariable:
                    return {status:false}; 
                }
                console.log('user confirmed');
-                console.log("The user name is ",prismaUser.name);
                //@ts-ignore
                const addeduser = new User( prismaUser.name,decryptedToken.id,socket );
                //@ts-ignore
                 userIdMapping.set(decryptedToken.id , addeduser);
-                console.log(`This is the added User${addeduser.name}`);
+                console.log(`This is the added User${addeduser}`);
                return {status:true , addeduser} ; 
            }
            return {status:false };

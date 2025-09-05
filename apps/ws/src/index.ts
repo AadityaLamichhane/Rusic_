@@ -1,7 +1,7 @@
 import { WebSocketServer } from "ws";
 import * as dotenv from "dotenv";
 dotenv.config();
-import { pub,sub, initializeRedis } from "./redisconfig";
+import { pub, initializeRedis } from "./redisconfig";
 import { User  } from "./UserClass";
 import { Socket_Sending,Socket_Sending_type } from "./type";
 import { sectionMap } from "./UserClass";
@@ -10,14 +10,6 @@ import {loader , Sections} from "./sections"
 import { Join_the_section } from "./sections/src/JoinSection";
 export const SectionIdList:string[] =[];
 export const userIdMapping= new Map<string,User>();
- let socketSendingVariable: Socket_Sending = {
-    payload:{
-    type:"res",
-    commands:"",
-    
-    },
-    type:Socket_Sending_type.Initial_Call,
- }
 // redis
 initializeRedis().then(()=>{
      ServerHandeling(); //Redis Stuff
@@ -29,30 +21,33 @@ let isJoined = false ;
     const wss = new WebSocketServer({port:8080});
     wss.on("connection",(socket:any)=>{
         socket.on("message",async(message:string)=>{
+
+                let socketSendingVariable: Socket_Sending = {
+                    payload:{
+                    type:"res",
+                    commands:"",
+                    },
+                    type:Socket_Sending_type.Initial_Call,
+                }
+            
              const messegeJson:Socket_Sending  = JSON.parse(message);
+           
             if(messegeJson.token && messegeJson.type==Socket_Sending_type.Initial_Call){
                 const data = await JoinMessegeHandling(messegeJson.token,socketSendingVariable,socket);
                 if(data.status){
-                    //@ts-ignore
-                    socketSendingVariable = {
-                        ...socketSendingVariable,
-                        type:Socket_Sending_type.Initial_Call,
-                        msg:"success"
-                    }
+                    socketSendingVariable.type = Socket_Sending_type.Initial_Call;
+                    socketSendingVariable.msg="success"
                     socket.user = data.addeduser
-                    // Store the Local storage for the More consistent 
 
                 }else{
-                    socketSendingVariable = {
-                        ...socketSendingVariable,
-                        type:Socket_Sending_type.Initial_Call,
-                        msg:"fail"
-                    }
+                    socketSendingVariable.type = Socket_Sending_type.Initial_Call; 
+                    socketSendingVariable.msg="fail"
                 }
+                console.log('sending the responce of the Auth to the user');
                 socket.send(JSON.stringify(socketSendingVariable));
             }
             else if(messegeJson.payload.type=="req"){
-                console.log(messegeJson.type);
+               
                     switch(messegeJson.type){
                         
                         case Socket_Sending_type.Join_Section:
@@ -65,13 +60,8 @@ let isJoined = false ;
                             
                             const sectionCreation = await Join_the_section(messegeJson.sectionid || '' ,socket);
                             if(sectionCreation==true){
-                                socketSendingVariable = {
-                                    payload:{
-                                        commands:"GetState",
-                                        type:"req"
-                                    },sectionid:messegeJson.sectionid,
-                                    type:Socket_Sending_type.Stream_Man
-                                }
+                                socketSendingVariable.type = Socket_Sending_type.Join_Section; 
+                                socketSendingVariable.msg="success"
                                 socket.send(JSON.stringify(socketSendingVariable));
                             }
                             else{
@@ -79,14 +69,11 @@ let isJoined = false ;
                             }
                             break;
                         case Socket_Sending_type.Create_Stream:
-                            
-                            messegeJson.payload.commands="addQueue"
+                            messegeJson.payload.commands = "addQueue"
                             pub.publish(messegeJson.sectionid||'',JSON.stringify(messegeJson));
-                        //   client.hSet(JSON.stringify(messegeJson.sectionId),JSON.stringify(messegeJson.url));
-                        
                             break; 
                         case Socket_Sending_type.Stream_Man:
-                            
+                          
                             if(messegeJson.payload.commands=="GetState"){
                                 console.log('Send User from the redis');
                             }
@@ -103,6 +90,7 @@ let isJoined = false ;
         
     })
     socket.on("close",(socket:any)=>{
+        console.log(`before:${sectionMap.size}`);
         // remove the user From the array
            if (socket.user && socket.user.id) {
         userIdMapping.delete(socket.user.id);
@@ -110,6 +98,7 @@ let isJoined = false ;
             sectionMap.set(sections, users.filter(u => u.id !== socket.user.id));
         }
     }
+        console.log(sectionMap.size);
     })
 
 });
