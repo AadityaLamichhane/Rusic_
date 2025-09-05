@@ -1,12 +1,7 @@
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card"
 import { Play } from "lucide-react"
 import { QueueItem } from "./SectionType"
-
 export const CurrentPlaying = ({ currentPlaying, isOwner }: { currentPlaying: QueueItem | null, isOwner: boolean }) => {
-    if (currentPlaying != null) {
-        console.log(`This is the current playing${JSON.stringify(currentPlaying)}`);
-    }
-    
     return (
         <Card>
             <CardHeader>

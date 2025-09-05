@@ -1,33 +1,40 @@
 import prisma from "@repo/db/client";
 import * as dotenv from "dotenv";
-import jwt from "jsonwebtoken"
+import jwt from "jsonwebtoken";
+import { User } from "./UserClass";
+import { userIdMapping } from ".";
 dotenv.config();
-export const JoinMessegeHandling:any = async(token:string,socketSendingVariable:any)=>{
+export const JoinMessegeHandling:any = async(token:string,socketSendingVariable:any,socket:WebSocket)=>{
    try{
-    console.log(token );
-    console.log(process.env.AUTH_SECRET_WS);
        // @ts-ignore
-           const decryptedToken = jwt.verify(token,process.env.AUTH_SECRET_WS);
+           const decryptedToken =  jwt.verify(token,process.env.AUTH_SECRET_WS);
+           if(decryptedToken==null && decryptedToken==undefined){
+            console.log("Cannot Continue ");
+
+           }
            if(decryptedToken!=null){
                const prismaUser = await prisma.user.findFirst({
                    where:{
-                       //@ts-ignore
+                    //@ts-ignore
                        id:decryptedToken.id 
                    }
                });
                if(prismaUser==null){
-                   console.log("No such user was found");
                    socketSendingVariable= {...socketSendingVariable,msg:"fail"}
-                   return {status:false,id:"",name:"Anonymous"} ; 
+                   return {status:false}; 
                }
-               //@ts-ignore
                console.log('user confirmed');
-               return {status:true , id:prismaUser.id , name:prismaUser.name} ; 
+               //@ts-ignore
+               const addeduser = new User( prismaUser.name,decryptedToken.id,socket );
+               //@ts-ignore
+                userIdMapping.set(decryptedToken.id , addeduser);
+                console.log(`This is the added User${addeduser}`);
+               return {status:true , addeduser} ; 
            }
-           return {status:false , id:'',name:"Anonymous"};
+           return {status:false };
    }catch(err){
             console.log(err);
            console.log("you are handing the messege");
-           return {status:false , id:'',name:"Anonymous"}; 
+           return {status:false }; 
    }
 }

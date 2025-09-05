@@ -6,6 +6,8 @@ import { use, useEffect , useState } from "react"
 import { Loader } from "@/app/components/Loader";
 import QueueApp from "../../components/SectionInformation"
 import { ExportType ,SectionPageProps } from "@/lib/types";
+import { Provider } from "react-redux";
+import { store } from "@/app/components/store/store";
  let sectionInformation :ExportType={
     isOwner:false , 
     isSection:false,
@@ -41,8 +43,10 @@ export default function Component({params}:SectionPageProps) {
           </div>
       </div>
                {(loadingforsection==false && socket && sectionInformation.isSection)?<>
-              <QueueApp userSocket={socket} id={id} userid={sectionInformation.userid  as string} isOwner={sectionInformation.isOwner}>
-              </QueueApp>
+               <Provider store={store}>
+                <QueueApp userSocket={socket} id={id} userid={sectionInformation.userid  as string} isOwner={sectionInformation.isOwner}>
+                </QueueApp>
+               </Provider>
                </>:<>
                </>}
               {loadingforsection==false && socket && !sectionInformation.isSection? <>
