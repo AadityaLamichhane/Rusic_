@@ -1,6 +1,8 @@
 import prisma from "@repo/db/client";
 import { SendToConnectedUser } from "../useraction/Sendtoconnected";
 import { Socket_Sending } from "./../type";
+import { Section_Id_To_QueueMap, Stream } from "../UserClass";
+import { SectionStorage } from "../redis/SectionSubHandler";
 export async function createStream (parsedMessege:Socket_Sending){
 // call the publiser to publish the Stream and with the payload added
 
@@ -21,11 +23,23 @@ export async function createStream (parsedMessege:Socket_Sending){
                                 }
                                 }).then((responce:any)=>{
                                     console.log(responce);
-                                SendToConnectedUser(parsedMessege,responce);
+                                    //Update the inmemory 
+                                    // const streamQueue = Section_Id_To_QueueMap.get(parsedMessege.sectionid??"default");
+                                    // if(streamQueue==undefined ){
+                                    //     console.log("The stream Queue is Undefined");
+                                    //     return {status:"failed"} ; 
+                                    // }
+                                    // streamQueue.stream.push(newStream)
+                                    // Section_Id_To_QueueMap.set(parsedMessege.sectionid??"default",streamQueue);
+                                    //Update the redis Memory 
+                                   
+                                    SendToConnectedUser(parsedMessege.sectionid,responce);
+                                return {status:"success"}
                             }).catch((err:any)=>{
                                 console.log(err);
+                                return {status:"failed",data:{} }; 
                             });
-                            return true ; 
+                            return {status:"failed",data:{}} ; 
                     // Make the asynchronous db call to store the data 
                     }
                     else{//

@@ -1,6 +1,6 @@
 // Any Unique Type only needing in the Backend
 
-
+import { Stream } from "./UserClass"
  export enum Socket_Sending_type{
     Stream_Man, 
     Join_Section,
@@ -27,3 +27,6 @@
     msg?:String
     userid?:string
  }
+
+
+export type StreamWithInformation 

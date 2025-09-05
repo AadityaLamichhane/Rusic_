@@ -1,14 +1,20 @@
+import { pub } from "../redisconfig";
 import { createStream } from "../stream/createStream";
 import { sendStreamState } from "../stream/sendStreamState";
 import { Socket_Sending } from "../type";
+import { Section_Id_To_QueueMap } from "../UserClass";
+import { StorageClass } from "./SectionStorage";
+export const SectionStorage = new StorageClass(pub);
 export async function Section_Subhandler(messege:string){
-  
+                
                 const parsedMessege:Socket_Sending = await JSON.parse(messege);
                 if(parsedMessege.payload.commands=="addQueue"){
-                        console.log(`The string messege is ${JSON.stringify(parsedMessege)}`);
-                        await createStream(parsedMessege);
+                    await createStream(parsedMessege);
+                    
                 }else if(parsedMessege.payload.commands=="GetState"){
                     sendStreamState(parsedMessege);
+                    const data = await SectionStorage.getQueue(parsedMessege.sectionid??'defaultSection');
+                    console.log(data);
                     // Get the stream information from the map object of the queue 
                     // Get the stream and then populatr to the user 
                     // Get From the local storeage / assigned Id   / payload 

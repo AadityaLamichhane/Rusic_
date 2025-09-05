@@ -1,7 +1,8 @@
-import { streamQueue ,Section_Id_To_QueueMap,sectionMap} from "../UserClass";
+import { Section_Id_To_QueueMap,sectionMap} from "../UserClass";
 import axios from "axios";
 import { userIdMapping } from "..";
 import { Socket_Sending,Socket_Sending_type } from "./../type";
+import type {Stream} from "@prisma/client"
 let Socket_Sending_variable :Socket_Sending = {
      payload: {
         type: "res",
@@ -9,37 +10,47 @@ let Socket_Sending_variable :Socket_Sending = {
     },
     type: Socket_Sending_type.Stream_Man
 }
-export const  SendToConnectedUser = (parsedMessege:any,responce:any)=>{
+export const  SendToConnectedUser = (dbResponce:any)=>{
     console.log("Sending To Each User");
-        (!streamQueue.stream.find((stream)=>stream.url===responce.url &&
-            stream.createdBy===responce.userId && 
-            stream.section=== responce.sectionId
-        ))?
-        streamQueue.stream.push({
-           url:responce.url,
-            upvotes:0,
-            createdBy:responce.userId,
-                section:responce.sectionId
-        }):console.log("not found");
-Section_Id_To_QueueMap.set(parsedMessege.sectionid,streamQueue);
-
 try{
-    const getSectionuser = sectionMap.get(parsedMessege.sectionid);
+    const getSectionuser = sectionMap.get(dbResponce.sectionId);
     if(getSectionuser!=undefined){
-              axios.post("http://localhost:3000/api/stream",{url:responce.url}).then((responce)=>{
-        Socket_Sending_variable= {
-            ...Socket_Sending_variable,type:Socket_Sending_type.Create_Stream,
-            payload:{
-                type:"res",
-                commands:"addQueue",
-                videoInfo:{
-                    title:responce.data.videoinfo.title,
-                    channelTitle:responce.data.videoinfo.channel,
-                    videoId:responce.data.videoinfo.id,
-                    url:responce.data.videoUrl
-                },
-            }            ,
-        }
+              axios.post("http://localhost:3000/api/stream",{url:dbResponce.url}).then((axiosresponce)=>{
+
+            const queue_In_SectionId =Section_Id_To_QueueMap.get(dbResponce.sectionId);
+            if(queue_In_SectionId==undefined){
+                return false; 
+            }
+            (!queue_In_SectionId.find((stream)=>stream.url===dbResponce.url &&
+                stream.createdBy===dbResponce.userId && 
+                stream.section=== dbResponce.sectionId
+            ))?
+            queue_In_SectionId.push({
+                id:axiosresponce.data.data,
+                upvotes:0,
+                createdBy:dbResponce.userId,
+                section:dbResponce.sectionId,
+                title:axiosresponce.data.videoinfo.title,
+                channelTitle:axiosresponce.data.videoinfo.channel,
+                videoId:axiosresponce.data.videoinfo.id,
+                url:axiosresponce.data.videoUrl
+                }):console.log("not found");
+                Section_Id_To_QueueMap.set(dbResponce.sectionId,queue_In_SectionId);
+
+// 
+            Socket_Sending_variable= {
+                ...Socket_Sending_variable,type:Socket_Sending_type.Create_Stream,
+                payload:{
+                    type:"res",
+                    commands:"addQueue",
+                    videoInfo:{
+                        title:axiosresponce.data.videoinfo.title,
+                        channelTitle:axiosresponce.data.videoinfo.channel,
+                        videoId:axiosresponce.data.videoinfo.id,
+                        url:axiosresponce.data.videoUrl
+                    },
+                }
+            }
                 console.log(`This is the length of the user in the section : ${getSectionuser.length}`);
                 for(let i = 0 ; i <getSectionuser.length; i++){
                     const idMappedUser= userIdMapping.get(getSectionuser[i].id);
