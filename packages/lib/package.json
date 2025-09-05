@@ -10,7 +10,8 @@
     "./authOptions": "./authOptions.ts",
     "./utils": "./utils.ts",
     "./socketContext": "./hooks/useSocket.ts",
-    "./socketType":"./wsenvsetup.ts"
+    "./socketType":"./wsenvsetup.ts",
+    "./SocketVariableType":"./index"
   },
   "dependencies": {
     "@prisma/client": "^6.13.0",
@@ -20,6 +21,7 @@
     "react": "19.1.0"
   },
   "devDependencies": {
-    "@types/react": "^19"
+    "@types/react": "^19",
+    "@repo/types":"workspace:*"
   }
 }

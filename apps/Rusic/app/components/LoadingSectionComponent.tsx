@@ -1,4 +1,4 @@
-import { Socket_Sending ,Socket_Sending_type } from "@repo/lib/socketContext";
+import { Socket_Sending ,Socket_Sending_type } from "@repo/types/tsType";
 import { useRouter } from "next/navigation";
 export const LoadingSectionComponent = ({id,socket,sectionInformation}:{id:string,socket:WebSocket|null,sectionInformation:any})=>{
     const navigate = useRouter();

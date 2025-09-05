@@ -1,34 +1,13 @@
+"use client"
 import {  useEffect, useState  } from "react";
-import { onSocketConnection } from "@repo/lib";
+import  onSocketConnection from "@repo/lib/wsenvsetup";
 import { useSession } from "next-auth/react";
-import { parse } from "path";
- export enum Socket_Sending_type{
-    Stream_Man, 
-    Join_Section,
-    Create_Stream,
-    Initial_Call,
-    Create_Section
- }
- 
- export type Socket_Sending= {
-   payload:{
-      type:"req"| "res",
-      commands:"addQueue"|"updateQueue"|"",
-        videoinfo?:{}
-
-   },
-    type : Socket_Sending_type,
-    url?: string  ,
-    token?: string,
-    sectionid?: string
-    msg?:String
-    userid?:string
- }
+import {Socket_Sending,Socket_Sending_type } from "@repo/types/tsType"
 let Soket_SendingVariable: Socket_Sending ={
     payload:{
         type:"req",
         commands:"",
-        videoinfo:{}
+        videoInfo:{}
     },
     type: Socket_Sending_type.Initial_Call,
     token: "",

@@ -21,20 +21,21 @@ export const JoinMessegeHandling:any = async(token:string,socketSendingVariable:
                });
                if(prismaUser==null){
                    socketSendingVariable= {...socketSendingVariable,msg:"fail"}
-                   return {status:false,id:"",name:"Anonymous"} ; 
+                   return {status:false}; 
                }
                console.log('user confirmed');
-
+                console.log("The user name is ",prismaUser.name);
                //@ts-ignore
                const addeduser = new User( prismaUser.name,decryptedToken.id,socket );
                //@ts-ignore
                 userIdMapping.set(decryptedToken.id , addeduser);
+                console.log(`This is the added User${addeduser.name}`);
                return {status:true , addeduser} ; 
            }
-           return {status:false , id:'',name:"Anonymous"};
+           return {status:false };
    }catch(err){
             console.log(err);
            console.log("you are handing the messege");
-           return {status:false , id:'',name:"Anonymous"}; 
+           return {status:false }; 
    }
 }

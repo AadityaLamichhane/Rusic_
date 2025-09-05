@@ -1,7 +1,7 @@
-import { streamQueue ,SectionQueueMap,sectionMap} from "../UserClass";
+import { streamQueue ,Section_Id_To_QueueMap,sectionMap} from "../UserClass";
 import axios from "axios";
 import { userIdMapping } from "..";
-import { Socket_Sending,Socket_Sending_type } from "../type";
+import { Socket_Sending,Socket_Sending_type } from "./../type";
 let Socket_Sending_variable :Socket_Sending = {
      payload: {
         type: "res",
@@ -10,7 +10,7 @@ let Socket_Sending_variable :Socket_Sending = {
     type: Socket_Sending_type.Stream_Man
 }
 export const  SendToConnectedUser = (parsedMessege:any,responce:any)=>{
-
+    console.log("Sending To Each User");
         (!streamQueue.stream.find((stream)=>stream.url===responce.url &&
             stream.createdBy===responce.userId && 
             stream.section=== responce.sectionId
@@ -21,7 +21,7 @@ export const  SendToConnectedUser = (parsedMessege:any,responce:any)=>{
             createdBy:responce.userId,
                 section:responce.sectionId
         }):console.log("not found");
-SectionQueueMap.set(parsedMessege.sectionid,streamQueue);
+Section_Id_To_QueueMap.set(parsedMessege.sectionid,streamQueue);
 
 try{
     const getSectionuser = sectionMap.get(parsedMessege.sectionid);
@@ -40,18 +40,16 @@ try{
                 },
             }            ,
         }
-            if(JSON.stringify(responce.status)[0] == '2'){
-                
+                console.log(`This is the length of the user in the section : ${getSectionuser.length}`);
                 for(let i = 0 ; i <getSectionuser.length; i++){
-                    const user_idMap = userIdMapping.get(getSectionuser[i].id);
-                    console.log(user_idMap)
+                    const idMappedUser= userIdMapping.get(getSectionuser[i].id);
                     if(getSectionuser[i]!=undefined && getSectionuser[i].socket!=undefined){
-                        user_idMap?.socket?.send(JSON.stringify(Socket_Sending_variable));
+                        console.log(idMappedUser?.socket?.readyState)
+                        idMappedUser?.socket?.send(JSON.stringify(Socket_Sending_variable));
                     }
             }
-            }
+            
         })
-        console.log(SectionQueueMap.get(parsedMessege.sectionid));
     }
     // When the new Queue is added ->  redis -> ws (QueueStatus{Update , addiition , removal , }) 
     // have another function that catches the redis -> Section , payload : (Queue ) , Type :{Add , Updated , delete , upnext }

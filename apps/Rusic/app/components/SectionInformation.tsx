@@ -5,7 +5,7 @@ import {  Share2 } from "lucide-react"
 import { youtubeRegex } from "@repo/lib"
 import { AddItemToSection } from "./section/AdditemToSection"
 import { QueueSection } from "./section/QueueSection"
-import { Socket_Sending, Socket_Sending_type } from "@repo/lib/socketContext"
+import { Socket_Sending, Socket_Sending_type } from "@repo/types/tsType"
 import { QueueItem } from "./section/SectionType"
 import { CurrentPlaying } from "./section/CurrentPlaying"
 import { useAppDispatch } from "./store/hooks"
@@ -14,7 +14,7 @@ const socketSendingVariable:Socket_Sending = {
   payload:{
     type:"req",
     commands:"",
-    videoinfo:{}
+    videoInfo:{}
   },
     type:Socket_Sending_type.Join_Section
 }
@@ -67,11 +67,15 @@ const queueapplication = useAppDispatch()
       socketSendingVariable.sectionid = id;
       userSocket?.send(JSON.stringify(socketSendingVariable));
       const socketHandler = async(message:MessageEvent)=>{
-        //@ts-ignore
-        const parsedMessage = JSON.parse(message.data);
+        console.log('Hello');
+       
+        const parsedMessage =  await JSON.parse(message.data);
+        console.log(`This is the parsed Messege ${JSON.stringify(parsedMessage)}`);
+        
         const CurrentTime = new Date().toLocaleTimeString();
         if(parsedMessage.payload.type=="res"){
               if(parsedMessage.payload.commands=="addQueue"){
+                console.log("Added to the queue");
                     const newStream = {
                       id: parsedMessage.payload.videoInfo.videoId,
                       title: parsedMessage.payload.videoInfo.title,
@@ -91,7 +95,6 @@ const queueapplication = useAppDispatch()
         }
       }
       userSocket.addEventListener('message',socketHandler);
-      return ()=>userSocket.removeEventListener('message',socketHandler);
   },[]);
     const shareQueue = async () => {
       try {

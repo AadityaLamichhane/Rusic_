@@ -1,7 +1,11 @@
 import { sectionMap,User } from "../../UserClass";
 import {SectionIdList} from "../.."
+import { sub } from "../../redisconfig";
 import prisma from "@repo/db/client";
-export async function Join_the_section (sectionid:string,user:User,socket:WebSocket){
+import { Section_Subhandler } from "../../redis/SectionSubHandler";
+export async function Join_the_section (sectionid:string,socket:WebSocket){
+    //@ts-ignore
+    const user:User = socket.user ; 
     if(!sectionMap.get(sectionid) && !SectionIdList.includes(sectionid)){
         sectionMap.set(sectionid ,[user]);
         try{
@@ -12,7 +16,7 @@ export async function Join_the_section (sectionid:string,user:User,socket:WebSoc
             }
         });
         // Set the SectionIdList
-        
+
         if(sectionCreation==undefined || sectionCreation==null){
             return false ; 
         }
@@ -21,14 +25,17 @@ export async function Join_the_section (sectionid:string,user:User,socket:WebSoc
             console.log(err);
             }
 
+            sub.subscribe(sectionid,async (messege:string)=>{
+                Section_Subhandler(messege);
+            })
     }else{
-        
+       SectionIdList.push(sectionid);
         const usersarray = sectionMap.get(sectionid);
         if(usersarray!=undefined){
-            // know if the user is already if this user 
-            const isGivenUser = sectionMap.get(sectionid)?.filter((individualUser:User)=>individualUser.id==user.id);
-            if(!isGivenUser){
-                sectionMap.set(sectionid ,[...usersarray,user]);
+//          In this Using the get will cause the error as the array will be there causing the illusion that it is defined and store in the variable while it is not 
+            const alreadyInSection = usersarray.some((u:User)=> u.id===user.id);
+            if(!alreadyInSection){
+                sectionMap.set(sectionid,[...usersarray,user]);
             }
         }else{
             console.log("unexpected behaviour");

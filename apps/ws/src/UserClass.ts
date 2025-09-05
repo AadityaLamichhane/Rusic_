@@ -25,9 +25,8 @@ export class Queue{
 };
 // Initializing the queue as the empty (--initial before making the server)
 export const streamQueue:Queue ={stream:[]}; 
-export const SectionQueueMap = new Map<string,Queue>(); 
+export const Section_Id_To_QueueMap = new Map<string,Queue>(); 
 export const sectionMap = new Map<string,User[]>();
-export const userSectionMap = new Map<string,string>();
 export const  createUser  = (name:string,id:string,socket?:WebSocket)=>{
     if(socket!=undefined){
         const tempUser = new User(name,id);

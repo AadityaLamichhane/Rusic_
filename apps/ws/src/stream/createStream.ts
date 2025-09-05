@@ -1,10 +1,10 @@
 import prisma from "@repo/db/client";
 import { SendToConnectedUser } from "../useraction/Sendtoconnected";
-export async function createStream (parsedMessege:any){
+import { Socket_Sending } from "./../type";
+export async function createStream (parsedMessege:Socket_Sending){
+// call the publiser to publish the Stream and with the payload added
 
-
-// call the publiser to publish the Stream and with the payload added 
-
+    if(parsedMessege.payload.videoInfo!=undefined  ){
                     const findPrisma = await prisma.stream.findFirst({
                         where:{
                             url:parsedMessege.url,
@@ -16,7 +16,7 @@ export async function createStream (parsedMessege:any){
                                 data:{
                                 sectionId :parsedMessege.sectionid,
                                     userId:parsedMessege.userid,
-                                    urlId:parsedMessege.urlid,
+                                    urlId:parsedMessege.payload.videoInfo.urlId ,
                                     url:parsedMessege.url
                                 }
                                 }).then((responce:any)=>{
@@ -25,9 +25,13 @@ export async function createStream (parsedMessege:any){
                             }).catch((err:any)=>{
                                 console.log(err);
                             });
+                            return true ; 
                     // Make the asynchronous db call to store the data 
                     }
                     else{//
                         // Condition for the stream is Doun in the file 
+                        console.log("This was already in the Section Try Recaching it ");
+                        return false ; 
                         }
+}
 }

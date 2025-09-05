@@ -3,7 +3,8 @@ import * as dotenv from "dotenv";
 dotenv.config();
 import { pub,sub, initializeRedis } from "./redisconfig";
 import { User  } from "./UserClass";
-import { Socket_Sending , Socket_Sending_type } from "./type";
+import { Socket_Sending,Socket_Sending_type } from "./type";
+import { sectionMap } from "./UserClass";
 import { JoinMessegeHandling } from "./JoinAuth";
 import {loader , Sections} from "./sections"
 import { Join_the_section } from "./sections/src/JoinSection";
@@ -40,7 +41,7 @@ let isJoined = false ;
                     }
                     socket.user = data.addeduser
                     // Store the Local storage for the More consistent 
-                    isJoined =true  
+
                 }else{
                     socketSendingVariable = {
                         ...socketSendingVariable,
@@ -51,7 +52,9 @@ let isJoined = false ;
                 socket.send(JSON.stringify(socketSendingVariable));
             }
             else if(messegeJson.payload.type=="req"){
+                console.log(messegeJson.type);
                     switch(messegeJson.type){
+                        
                         case Socket_Sending_type.Join_Section:
                             // Make the redis call simoultanous
                             //@ts-ignore
@@ -59,9 +62,17 @@ let isJoined = false ;
                                 console.log("you are not authenticated");
                                 // Send the Socket mEsseging the error trigger
                             } 
-                            const sectionCreation = await Join_the_section(messegeJson.sectionid || '' ,socket.user,socket);
+                            
+                            const sectionCreation = await Join_the_section(messegeJson.sectionid || '' ,socket);
                             if(sectionCreation==true){
-                                console.log("Added to the section");
+                                socketSendingVariable = {
+                                    payload:{
+                                        commands:"GetState",
+                                        type:"req"
+                                    },sectionid:messegeJson.sectionid,
+                                    type:Socket_Sending_type.Stream_Man
+                                }
+                                socket.send(JSON.stringify(socketSendingVariable));
                             }
                             else{
                                 console.log("Getting the information from the Sections");
@@ -69,13 +80,17 @@ let isJoined = false ;
                             break;
                         case Socket_Sending_type.Create_Stream:
                             
-                            //@ts-ignore
-                            pub.publish(messegeJson.sectionid,JSON.stringify({...messegeJson,payload:{type:"create_section"}}));
+                            messegeJson.payload.commands="addQueue"
+                            pub.publish(messegeJson.sectionid||'',JSON.stringify(messegeJson));
                         //   client.hSet(JSON.stringify(messegeJson.sectionId),JSON.stringify(messegeJson.url));
                         
                             break; 
                         case Socket_Sending_type.Stream_Man:
-                            console.log("You are trying to manipulate ");
+                            
+                            if(messegeJson.payload.commands=="GetState"){
+                                console.log('Send User from the redis');
+                            }
+                            // take the Stream man functiona and either upvote downvote or get the current state from the redis application
                             break; 
                         case Socket_Sending_type.Create_Section:
                             console.log('You are trying to create the section');
@@ -85,6 +100,16 @@ let isJoined = false ;
                             return ; 
                     }
             }
+        
+    })
+    socket.on("close",(socket:any)=>{
+        // remove the user From the array
+           if (socket.user && socket.user.id) {
+        userIdMapping.delete(socket.user.id);
+        for (const [sections, users] of sectionMap) {
+            sectionMap.set(sections, users.filter(u => u.id !== socket.user.id));
+        }
+    }
     })
 
 });
