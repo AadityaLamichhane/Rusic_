@@ -13,11 +13,11 @@ export class Stream {
     url:string ;
     upvotes: number ;
     createdBy :string ;
-    section:string; 
+    section_name:string; 
     title:string ;
     channelTitle:string;
     videoId:string;
-    constructor (id:string , url:string , upvotes:number,createdBy:string,section:string,title:string,channelTitle:string,videoId:string){
+    constructor (id:string , url:string , upvotes:number,createdBy:string,section_name:string,title:string,channelTitle:string,videoId:string){
         this.id = id ;
         this.title = title ; 
         this.channelTitle = channelTitle; 
@@ -25,7 +25,7 @@ export class Stream {
         this.url = url ; 
         this.upvotes = upvotes;
         this.createdBy = createdBy;
-        this.section = section;
+        this.section_name =section_name;
     }
 }
 

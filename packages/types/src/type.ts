@@ -9,6 +9,7 @@
  export type Socket_Sending= {
    payload:{
       type:"req"| "res",
+      msg?:string,
       commands:"addQueue"|"updateQueue"| "" |"GetState"
       videoInfo?:{
                   urlId?:string

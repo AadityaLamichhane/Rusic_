@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "npx tsc -b && node dist/index.js"
+    "dev": " npx tsc -b && node dist/index.js"
   },
   "keywords": [],
   "author": "",
@@ -21,12 +21,12 @@
     "dotenv": "^17.2.1",
     "jsonwebtoken": "^9.0.2",
     "next-auth": "^4.24.11",
+    "nodemon": "^3.1.10",
     "redis": "^5.8.0",
     "ws": "^8.18.3"
   },
   "devDependencies": {
     "@repo/db": "workspace:*",
-    
     "typescript": "5.7.3"
   }
 }

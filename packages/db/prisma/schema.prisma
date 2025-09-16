@@ -35,11 +35,11 @@ model Stream{
   urlId   String 
   upvotes Upvotes[]
   type    StreamType @default(youtube)
-  sectionId String 
-  section Section @relation(fields: [sectionId],references: [Sectionname])
+  sectionname String 
+  section Section @relation(fields: [sectionname],references: [Sectionname])
   user    User @relation(fields: [userId] ,references: [id])
-@@unique([url,sectionId])
-@@unique([urlId,sectionId])
+@@unique([url,sectionname])
+@@unique([urlId,sectionname])
 }
 model Upvotes{
   id        String @default(uuid()) @unique

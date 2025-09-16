@@ -3,6 +3,7 @@ import axios from "axios";
 import { Stream } from "../UserClass";
 import { userIdMapping } from "..";
 import { Socket_Sending,Socket_Sending_type } from "./../type";
+import { StorageController } from "../redis/Storage";
 
 export const  SendToConnectedUser = (dbResponce:any)=>{
 let Socket_Sending_variable :Socket_Sending = {
@@ -13,38 +14,43 @@ let Socket_Sending_variable :Socket_Sending = {
     type: Socket_Sending_type.Stream_Man
 }
 try{
-    const getSectionuser = sectionMap.get(dbResponce.sectionId);
+    console.log('this is the send to user');
+    const getSectionuser = sectionMap.get(dbResponce.sectionname);
     if(getSectionuser!=undefined){
               axios.post("http://localhost:3000/api/stream",{url:dbResponce.url}).then((axiosresponce)=>{
 
             if(!Section_Id_To_QueueMap.has(dbResponce.sectionId)){
-                console.log('Dont have the token yet ');
                 Section_Id_To_QueueMap.set(dbResponce.sectionId,[]);
             }
             const queue_In_SectionId=Section_Id_To_QueueMap.get(dbResponce.sectionId);
-            console.log(`This is tthe Queue in the inmemory ${JSON.stringify(queue_In_SectionId)}`);
             if(queue_In_SectionId==undefined){
                 return new Error();
             }
-            (!queue_In_SectionId.find((stream)=>stream.url===dbResponce.url &&
+            if(queue_In_SectionId.find((stream)=>stream.url===dbResponce.url &&
                 stream.createdBy===dbResponce.userId && 
-                stream.section=== dbResponce.sectionId
-            ))?
-            queue_In_SectionId.push({
-                id:axiosresponce.data.data,
+                stream.section_name=== dbResponce.sectionname
+            )){
+                console.log('Already in the session');
+                return ; 
+            } 
+            console.log("This is creating the new stream on LIne ");
+            const newStream:Stream = {
+                id:dbResponce.id,
                 upvotes:0,
                 createdBy:dbResponce.userId,
-                section:dbResponce.sectionId,
+                section_name:dbResponce.sectionname,
                 title:axiosresponce.data.videoinfo.title,
                 channelTitle:axiosresponce.data.videoinfo.channel,
                 videoId:axiosresponce.data.videoinfo.id,
                 url:axiosresponce.data.videoUrl
-                }):console.log("not found");
-            
-            Section_Id_To_QueueMap.set(dbResponce.sectionId,queue_In_SectionId);
+            }
+            queue_In_SectionId.push(newStream);
+        StorageController.addToQueue(dbResponce.sectionname, newStream).then(()=>{
+            console.log('the data is stored');
+        }); //Calling the db for the responce
+        Section_Id_To_QueueMap.set(dbResponce.sectionId,queue_In_SectionId);
 
 // 
-            
             Socket_Sending_variable= {
                 ...Socket_Sending_variable,type:Socket_Sending_type.Create_Stream,
                 payload:{
@@ -58,12 +64,10 @@ try{
                     },
                 }
             }
-          
-                console.log(`This is the length of the user in the section : ${getSectionuser.length}`);
+            console.log('Seding to the user');
                 for(let i = 0 ; i <getSectionuser.length; i++){
                     const idMappedUser= userIdMapping.get(getSectionuser[i].id);
                     if(getSectionuser[i]!=undefined && getSectionuser[i].socket!=undefined){
-                        console.log(idMappedUser?.socket?.readyState)
                         idMappedUser?.socket?.send(JSON.stringify(Socket_Sending_variable));
                     }
             }
