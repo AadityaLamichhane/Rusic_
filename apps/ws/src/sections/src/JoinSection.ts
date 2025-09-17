@@ -1,6 +1,6 @@
-import { sectionMap,User } from "../../UserClass";
+import {  sectionMap,User } from "../../UserClass";
 import {SectionIdList} from "../.."
-import { sub } from "../../redisconfig";
+import {  sub } from "../../redisconfig";
 import prisma from "@repo/db/client";
 import { Section_Subhandler } from "../../redis/SectionSubHandler";
 export async function Join_the_section (sectionid:string,socket:WebSocket){
@@ -26,10 +26,11 @@ export async function Join_the_section (sectionid:string,socket:WebSocket){
             console.log('Error while joining the section');
             console.log(err);
             }
-
+            console.log('The storage is initialize');
             sub.subscribe(sectionid,async (messege:string)=>{
                 Section_Subhandler(messege);
             })
+            
     }else{
        SectionIdList.push(sectionid);
         const usersarray = sectionMap.get(sectionid);
@@ -39,7 +40,6 @@ export async function Join_the_section (sectionid:string,socket:WebSocket){
             if(!alreadyInSection){
                 sectionMap.set(sectionid,[...usersarray,user]);
             }
-          
         }else{
             console.log("unexpected behaviour");
             return false ; 

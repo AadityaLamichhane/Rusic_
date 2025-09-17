@@ -10,7 +10,11 @@ import { QueueItem } from "./section/SectionType"
 import { CurrentPlaying } from "./section/CurrentPlaying"
 import { useAppDispatch } from "./store/hooks"
 import { addQueue } from "./store/slice/QueueSlice"
-const socketSendingVariable:Socket_Sending = {
+import { ChangeLoading } from "./store/slice/AddButtonSlice"
+export default function QueueApp({userSocket,id,userid,isOwner}:{userSocket:WebSocket,id:string,userid:string,isOwner:boolean}) {
+  const [currentPlaying, setCurrentPlaying] = useState<QueueItem | null>(null);
+
+ let socketSendingVariable:Socket_Sending = {
   payload:{
     type:"req",
     commands:"",
@@ -18,18 +22,6 @@ const socketSendingVariable:Socket_Sending = {
   },
     type:Socket_Sending_type.Join_Section
 }
-export default function QueueApp({userSocket,id,userid,isOwner}:{userSocket:WebSocket,id:string,userid:string,isOwner:boolean}) {
-  const [currentPlaying, setCurrentPlaying] = useState<QueueItem | null>(null);
-  /**
-   If No one is playing any song on queue get the top and play 
-   pseudo code if(currentPlaying==null && Quuee.length >0 ){
-    //  Play the Front of qeueue 
-    // Have one variable storing the current timeline and on the Diff of Total video length and te timeline <= 0 then PlayNext is Triggered
-    // In  the play next get the top of the queue and then push it to the playing component (if Streamer Play the embedded video Automatically and if Not just show them the thumnaoil with playing Emoji on thi s
-    // Have the socket operation on the queue Implementation
-    // if i were to use redux ( Store , Actions (do what ---> Add music == Store .push music Information , On Click the button get the Input value -> store and then Get Access to it using the socket and then Wala, onNext->Update the current playing player to the top of the Quee), Slice(Addmusic , MaintainQueue , GettheInputString* , PlayNext , Delete  )  )
-   }
-   */ 
 const queueapplication = useAppDispatch()
   const [newItemTitle, setNewItemTitle] = useState("")
   const [youtubeId,setYoutubeId ]= useState('');
@@ -67,34 +59,60 @@ const queueapplication = useAppDispatch()
       socketSendingVariable.sectionid = id;
       userSocket?.send(JSON.stringify(socketSendingVariable));
       const socketHandler = async(message:MessageEvent)=>{
-        console.log('Hello');
-       
-        const parsedMessage =  await JSON.parse(message.data);
-        console.log(`This is the parsed Messege ${JSON.stringify(parsedMessage)}`);
-        
+        const parsedMessage =JSON.parse(message.data);
         const CurrentTime = new Date().toLocaleTimeString();
+        console.log(parsedMessage);
         if(parsedMessage.payload.type=="res"){
-              if(parsedMessage.payload.commands=="addQueue"){
-                console.log("Added to the queue");
-                    const newStream = {
-                      id: parsedMessage.payload.videoInfo.videoId,
-                      title: parsedMessage.payload.videoInfo.title,
-                      upvotes:0,
-                      addedAt:CurrentTime,
-                      url:parsedMessage.payload.videoInfo.url
-                    };
-                setYoutubeId('');
-                console.log(newStream);
-                setNewItemTitle('');
-                queueapplication(addQueue(newStream));
-                // Have the call to the pub Sub about adding the stream
-                // Have the status of the request and respond according to the rqeust
+          if(parsedMessage.type==Socket_Sending_type.Join_Section){
+            const getState = ()=>{
+              socketSendingVariable.type = Socket_Sending_type.Stream_Man;
+              socketSendingVariable.sectionid = id ; 
+              socketSendingVariable.payload.commands="GetState"
+              userSocket.send(JSON.stringify(socketSendingVariable));
+            }
+            const  debounceCall = (getState:()=>void,delay:any)=>{
+              let  timer ; 
+              clearTimeout(timer);
+               timer = setTimeout(()=>{
+                getState();
 
-                console.log(parsedMessage.url)
-              }
+              },delay);
+            }
+              debounceCall(getState,300);
+          }
+          if(parsedMessage.payload.commands =="GetState"){
+            const queue : any[]= parsedMessage.queue ; 
+           queue.forEach((element)=>{
+            const setupNewStream = {
+                id:element.videoId,
+                title: element.title,
+                upvotes: element.upvotes,
+                addedAt: "",
+                url: element.url
+            }
+            queueapplication(addQueue(setupNewStream));
+            queueapplication(ChangeLoading(true));
+           })
+          }
+          if(parsedMessage.payload.commands=="addQueue"){
+                const newStream = {
+                  id: parsedMessage.payload.videoInfo.videoId,
+                  title: parsedMessage.payload.videoInfo.title,
+                  upvotes:0,
+                  addedAt:CurrentTime,
+                  url:parsedMessage.payload.videoInfo.url
+                };
+            setYoutubeId('');
+            setNewItemTitle('');
+            queueapplication(addQueue(newStream));
+            console.log(parsedMessage.url)
+          }
         }
       }
       userSocket.addEventListener('message',socketHandler);
+      return ()=>{
+        userSocket.removeEventListener('message',socketHandler);
+      }
   },[]);
     const shareQueue = async () => {
       try {

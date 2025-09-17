@@ -27,6 +27,7 @@ import { Stream } from "./UserClass"
     sectionid?: string
     msg?:String
     userid?:string
+    queue?:Stream[]
  }
 
 

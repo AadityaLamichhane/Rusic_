@@ -1,4 +1,5 @@
 import { createClient, RedisClientType} from "redis";
+import { StorageController, StorageInit } from "./redis/Storage";
 const redisConfig = {
     host:process.env.REDIS_HOST|| 'localhost',
     port:parseInt(process.env.REDIS_PORT || "6379"),
@@ -29,6 +30,7 @@ export async function initializeRedis(){
  
 process.on('SIGINT', async () => {
     console.log('Shutting down gracefully...');
+    await pub.FLUSHDB();
     await pub.quit();
     process.exit(0);
 });

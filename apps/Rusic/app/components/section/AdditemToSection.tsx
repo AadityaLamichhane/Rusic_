@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input"
 import { Plus } from "lucide-react"
 import { QueueItem } from "./SectionType"
 import { Socket_Sending ,Socket_Sending_type } from "@repo/types/tsType"
+import { useAppDispatch, useAppSelector } from "../store/hooks"
+import { ChangeLoading } from "../store/slice/AddButtonSlice"
 let socketVariable :Socket_Sending = {
   payload:{
     type:"req",
@@ -18,6 +20,7 @@ let socketVariable :Socket_Sending = {
 }
 export  function AddItemToSection  ({newItemTitle , setNewItemTitle ,userSocket,id,userid,urlId,SetButtonLoading,buttonLoading}:{newItemTitle:string , setNewItemTitle:(params:string)=>void ,userSocket:WebSocket,id:string,userid:string,urlId:string,SetButtonLoading:(varriable:boolean)=>void,buttonLoading:boolean}){
 // when clicked you can have the loader while having to feth the api 
+const EventDispatcher = useAppDispatch();
   const addItem =() => {
     if(newItemTitle.length>=10 && socketVariable.payload.videoInfo!=undefined){
       socketVariable.url = newItemTitle;
@@ -34,9 +37,13 @@ export  function AddItemToSection  ({newItemTitle , setNewItemTitle ,userSocket,
         url:""
       }
     }
-    //   @ts-ignore
   }
-
+  const LoadingAdd = useAppSelector((state)=>state.LoadingAdd);
+  if(LoadingAdd){
+    return <>
+    Processing to add the data
+    </>
+  }
   return( <>
         <Card>
           <CardHeader>
@@ -54,8 +61,14 @@ export  function AddItemToSection  ({newItemTitle , setNewItemTitle ,userSocket,
               />
               <Button onClick={()=>{
                 addItem();
-                SetButtonLoading(true);
-                }} >
+                if(newItemTitle!="" || newItemTitle.length>10){
+                  setTimeout(()=>{
+                    EventDispatcher(ChangeLoading(true));
+                  },7000);
+
+                  EventDispatcher(ChangeLoading(false));
+                }
+                }} className={`${(LoadingAdd)?'scale-0 opacity-0':'scale-100 opacity-100'}`} >
                 <Plus className="w-4 h-4 mr-2" />
                 Add 
               </Button>

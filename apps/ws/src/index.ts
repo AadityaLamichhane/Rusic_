@@ -8,14 +8,18 @@ import { sectionMap } from "./UserClass";
 import { JoinMessegeHandling } from "./JoinAuth";
 import {loader , Sections} from "./sections"
 import { Join_the_section } from "./sections/src/JoinSection";
+import { StorageInit } from "./redis/Storage";
 export const SectionIdList:string[] =[];
 export const userIdMapping= new Map<string,User>();
 // redis
-initializeRedis().then(()=>{
+(async()=>{
+    await initializeRedis()
+    StorageInit();
      ServerHandeling(); //Redis Stuff
      Sections(); //Sections Deletion after the server is re initiated
      loader();  //User Defination
-})
+})(); //Making the callback function call to the redis
+
 let isJoined = false ; 
  function ServerHandeling(){
     const wss = new WebSocketServer({port:8080});
@@ -49,7 +53,7 @@ let isJoined = false ;
             else if(messegeJson.payload.type=="req"){
                
                     switch(messegeJson.type){
-                        
+
                         case Socket_Sending_type.Join_Section:
                             // Make the redis call simoultanous
                             //@ts-ignore
@@ -61,6 +65,7 @@ let isJoined = false ;
                             const sectionCreation = await Join_the_section(messegeJson.sectionid || '' ,socket);
                             if(sectionCreation==true){
                                 socketSendingVariable.type = Socket_Sending_type.Join_Section; 
+                                 getStream(socket);
                                 socketSendingVariable.msg="success"
                                 socket.send(JSON.stringify(socketSendingVariable));
                             }
@@ -73,9 +78,10 @@ let isJoined = false ;
                             pub.publish(messegeJson.sectionid||'',JSON.stringify(messegeJson));
                             break; 
                         case Socket_Sending_type.Stream_Man:
-                          
                             if(messegeJson.payload.commands=="GetState"){
-                                console.log('Send User from the redis');
+                                const userId = socket.user.id ; 
+                                
+                                pub.publish(messegeJson.sectionid|| "",JSON.stringify({...messegeJson,userId}));
                             }
                             // take the Stream man functiona and either upvote downvote or get the current state from the redis application
                             break; 
@@ -103,3 +109,9 @@ let isJoined = false ;
 
 });
  }
+
+const  getStream  = ( socket:WebSocket)=>{
+    // Fetch the data from the Redis Client
+
+ }
+ 

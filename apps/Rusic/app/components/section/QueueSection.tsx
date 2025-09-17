@@ -59,7 +59,7 @@ return <>
                       <img src={'http://img.youtube.com/vi/'+item.id+"/sddefault.jpg"} alt="" className="w-24" />
                       <div>
                         <h4 className="font-medium">{item.title}</h4>
-                        <p className="text-sm text-muted-foreground">Added {item.addedAt}</p>
+                        {/* <p className="text-sm text-muted-foreground">Added {item.addedAt}</p> */}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
