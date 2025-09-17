@@ -1,6 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit"
 import { QueueItem } from "../../section/SectionType"
-const initialState:QueueItem[] =[]; 
+import { Stream } from "@repo/types/tsType"
+const initialState:Stream[] =[]; 
  const QueueSlice = createSlice({
     name:"Queuearray",
     initialState,

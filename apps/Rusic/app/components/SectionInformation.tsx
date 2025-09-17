@@ -10,6 +10,7 @@ import { QueueItem } from "./section/SectionType"
 import { CurrentPlaying } from "./section/CurrentPlaying"
 import { useAppDispatch } from "./store/hooks"
 import { addQueue } from "./store/slice/QueueSlice"
+import { ChangeLoading } from "./store/slice/AddButtonSlice"
 export default function QueueApp({userSocket,id,userid,isOwner}:{userSocket:WebSocket,id:string,userid:string,isOwner:boolean}) {
   const [currentPlaying, setCurrentPlaying] = useState<QueueItem | null>(null);
 
@@ -63,12 +64,10 @@ const queueapplication = useAppDispatch()
         console.log(parsedMessage);
         if(parsedMessage.payload.type=="res"){
           if(parsedMessage.type==Socket_Sending_type.Join_Section){
-
             const getState = ()=>{
               socketSendingVariable.type = Socket_Sending_type.Stream_Man;
               socketSendingVariable.sectionid = id ; 
               socketSendingVariable.payload.commands="GetState"
-              console.log(`The socket is being sent with the information ${JSON.stringify(socketSendingVariable)}`);
               userSocket.send(JSON.stringify(socketSendingVariable));
             }
             const  debounceCall = (getState:()=>void,delay:any)=>{
@@ -81,21 +80,33 @@ const queueapplication = useAppDispatch()
             }
               debounceCall(getState,300);
           }
-              if(parsedMessage.payload.commands=="addQueue"){
-                console.log("Added to the queue");
-                    const newStream = {
-                      id: parsedMessage.payload.videoInfo.videoId,
-                      title: parsedMessage.payload.videoInfo.title,
-                      upvotes:0,
-                      addedAt:CurrentTime,
-                      url:parsedMessage.payload.videoInfo.url
-                    };
-                setYoutubeId('');
-                console.log(newStream);
-                setNewItemTitle('');
-                queueapplication(addQueue(newStream));
-                console.log(parsedMessage.url)
-              }
+          if(parsedMessage.payload.commands =="GetState"){
+            const queue : any[]= parsedMessage.queue ; 
+           queue.forEach((element)=>{
+            const setupNewStream = {
+                id:element.videoId,
+                title: element.title,
+                upvotes: element.upvotes,
+                addedAt: "",
+                url: element.url
+            }
+            queueapplication(addQueue(setupNewStream));
+            queueapplication(ChangeLoading(true));
+           })
+          }
+          if(parsedMessage.payload.commands=="addQueue"){
+                const newStream = {
+                  id: parsedMessage.payload.videoInfo.videoId,
+                  title: parsedMessage.payload.videoInfo.title,
+                  upvotes:0,
+                  addedAt:CurrentTime,
+                  url:parsedMessage.payload.videoInfo.url
+                };
+            setYoutubeId('');
+            setNewItemTitle('');
+            queueapplication(addQueue(newStream));
+            console.log(parsedMessage.url)
+          }
         }
       }
       userSocket.addEventListener('message',socketHandler);

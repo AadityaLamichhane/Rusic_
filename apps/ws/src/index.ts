@@ -79,9 +79,9 @@ let isJoined = false ;
                             break; 
                         case Socket_Sending_type.Stream_Man:
                             if(messegeJson.payload.commands=="GetState"){
-                                console.log("This is being called by the Stream Manipulation");
-                                pub.publish(messegeJson.sectionid|| "",JSON.stringify(messegeJson));
+                                const userId = socket.user.id ; 
                                 
+                                pub.publish(messegeJson.sectionid|| "",JSON.stringify({...messegeJson,userId}));
                             }
                             // take the Stream man functiona and either upvote downvote or get the current state from the redis application
                             break; 
@@ -114,3 +114,4 @@ const  getStream  = ( socket:WebSocket)=>{
     // Fetch the data from the Redis Client
 
  }
+ 

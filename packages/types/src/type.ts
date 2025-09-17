@@ -1,4 +1,3 @@
-
  export enum Socket_Sending_type{
     Stream_Man, 
     Join_Section,
@@ -22,7 +21,28 @@
     type : Socket_Sending_type,
     url?: string  ,
     token?: string,
-    sectionid?: string
-    msg?:String
-    userid?:string
+    sectionid?: string,
+    msg?:String,
+    userid?:string,
+    queue?:Stream[]
  }
+export class Stream {
+    id:string;
+    url:string ;
+    upvotes: number ;
+    createdBy :string ;
+    section_name:string; 
+    title:string ;
+    channelTitle:string;
+    videoId:string;
+    constructor (id:string , url:string , upvotes:number,createdBy:string,section_name:string,title:string,channelTitle:string,videoId:string){
+        this.id = id ;
+        this.title = title ; 
+        this.channelTitle = channelTitle; 
+        this.videoId = videoId ; 
+        this.url = url ; 
+        this.upvotes = upvotes;
+        this.createdBy = createdBy;
+        this.section_name =section_name;
+    }
+}

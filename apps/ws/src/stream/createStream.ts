@@ -21,17 +21,18 @@ export async function createStream (parsedMessege:Socket_Sending){
                                 }).then((responce:any)=>{
                                     console.log(`This is the responce of the stream : ${JSON.stringify(responce)}`)
                                     SendToConnectedUser(responce);
-                                return {status:"success"}
+                                return {success:true , responce:responce}
                             }).catch((err:any)=>{
                                 console.log(err);
-                                return {status:"failed",data:{} }; 
+                                return {success:false,responce:null }; 
                             });
-                            return {status:"failed",data:{}} ; 
+                            return {success:true ,data:{}} ; 
                     }
                     else{//
-                        // Condition for the stream is Doun in the file 
-                        console.log("This was already in the Section ");
-                        return false ; 
+                        // Condition for the stream is Doun in the file
+                        console.log('This already exist in the Section');
+
+                        return {success:false,message:"exist"}
                         }
 }
 }
