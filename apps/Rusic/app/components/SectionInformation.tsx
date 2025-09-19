@@ -8,12 +8,11 @@ import { QueueSection } from "./section/QueueSection"
 import { Socket_Sending, Socket_Sending_type } from "@repo/types/tsType"
 import { QueueItem } from "./section/SectionType"
 import { CurrentPlaying } from "./section/CurrentPlaying"
-import { useAppDispatch } from "./store/hooks"
+import { useAppDispatch, useAppSelector } from "./store/hooks"
 import { addQueue } from "./store/slice/QueueSlice"
 import { ChangeLoading } from "./store/slice/AddButtonSlice"
+import { Stream } from "@repo/types/tsType"
 export default function QueueApp({userSocket,id,userid,isOwner}:{userSocket:WebSocket,id:string,userid:string,isOwner:boolean}) {
-  const [currentPlaying, setCurrentPlaying] = useState<QueueItem | null>(null);
-
  let socketSendingVariable:Socket_Sending = {
   payload:{
     type:"req",
@@ -28,6 +27,8 @@ const queueapplication = useAppDispatch()
   const [buttonLoading , setButtonLoading] = useState<boolean>(false);
   const videocode = useRef<string>('');
   const debounceTimer = useRef<NodeJS.Timeout| null>(null);
+  const isPlayingState = useAppSelector((state)=>state.PlaySlice);
+  const currentPlayingStream:Stream | null = useAppSelector((state)=>state.CurrentPlayingStream) as Stream|null;
     useEffect(()=>{
       if(newItemTitle=="" && youtubeId!=''){
         setYoutubeId('');
@@ -64,6 +65,7 @@ const queueapplication = useAppDispatch()
         console.log(parsedMessage);
         if(parsedMessage.payload.type=="res"){
           if(parsedMessage.type==Socket_Sending_type.Join_Section){
+
             const getState = ()=>{
               socketSendingVariable.type = Socket_Sending_type.Stream_Man;
               socketSendingVariable.sectionid = id ; 
@@ -75,7 +77,6 @@ const queueapplication = useAppDispatch()
               clearTimeout(timer);
                timer = setTimeout(()=>{
                 getState();
-
               },delay);
             }
               debounceCall(getState,300);
@@ -90,6 +91,7 @@ const queueapplication = useAppDispatch()
                 addedAt: "",
                 url: element.url
             }
+            console.log("Adding the Stream in the Section");
             queueapplication(addQueue(setupNewStream));
             queueapplication(ChangeLoading(true));
            })
@@ -114,6 +116,14 @@ const queueapplication = useAppDispatch()
         userSocket.removeEventListener('message',socketHandler);
       }
   },[]);
+
+
+  if(isPlayingState){
+    if(currentPlayingStream!=null){
+      console.log('The current playing duration is ',currentPlayingStream.duration);
+      
+    } 
+      }  
     const shareQueue = async () => {
       try {
         await navigator.share({
@@ -128,8 +138,6 @@ const queueapplication = useAppDispatch()
 
   return (
     <div className="min-h-screen bg-background p-4">
-      
-         
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -144,13 +152,13 @@ const queueapplication = useAppDispatch()
         {/* Now Playing Section */}
         {/* Add Item Section */}
         <div className="flex flex-col gap-8">
-        <CurrentPlaying currentPlaying={currentPlaying} isOwner={isOwner}></CurrentPlaying>
+        <CurrentPlaying isOwner={isOwner}></CurrentPlaying>
         <AddItemToSection newItemTitle = {newItemTitle} SetButtonLoading={setButtonLoading} setNewItemTitle = {setNewItemTitle} userSocket={userSocket} id={id} userid={userid} urlId={videocode.current}  buttonLoading={buttonLoading}>
         </AddItemToSection>
         </div>
         <div className="flex flex-col gap-8 ">
         {/* Queue Section */}
-        <QueueSection userSocket={userSocket} setCurrentPlaying={setCurrentPlaying} ></QueueSection>
+        <QueueSection></QueueSection>
         <div className="flex drop-shadow-sm group  ">
           {youtubeId!=""?<>
               <div className="flex justify-center items-center w-full rounded-xl overflow-clip group-hover:scale-105 transition-all duration-200 ease-in-out  ">

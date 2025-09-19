@@ -18,7 +18,8 @@ import { Stream } from "./UserClass"
                     title?:string,
                     channelTitle?:string,
                     videoId?:string,
-                    url?:string
+                    url?:string,
+                    duration?:number
       }
    },
     type : Socket_Sending_type,

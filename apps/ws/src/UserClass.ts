@@ -9,6 +9,7 @@ export class User {
     }
 }
 export class Stream {
+    duration:number; 
     id:string;
     url:string ;
     upvotes: number ;
@@ -17,8 +18,9 @@ export class Stream {
     title:string ;
     channelTitle:string;
     videoId:string;
-    constructor (id:string , url:string , upvotes:number,createdBy:string,section_name:string,title:string,channelTitle:string,videoId:string){
+    constructor (id:string , url:string , upvotes:number,createdBy:string,section_name:string,title:string,channelTitle:string,videoId:string,duration:number){
         this.id = id ;
+        this.duration = duration ;
         this.title = title ; 
         this.channelTitle = channelTitle; 
         this.videoId = videoId ; 

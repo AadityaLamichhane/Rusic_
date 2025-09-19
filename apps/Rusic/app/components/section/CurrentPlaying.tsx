@@ -1,40 +1,73 @@
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card"
-import { Play } from "lucide-react"
 import { QueueItem } from "./SectionType"
-export const CurrentPlaying = ({ currentPlaying, isOwner }: { currentPlaying: QueueItem | null, isOwner: boolean }) => {
+import { useAppDispatch, useAppSelector } from "../store/hooks"
+import { Play } from "lucide-react"
+import YoutubePlayer from "youtube-player";
+import { isPlaying } from "../store/slice/play";
+import { useRef,useEffect } from "react";
+import { Stream } from "@repo/types/tsType";
+export const CurrentPlaying = ({  isOwner }: {  isOwner: boolean }) => {
+    const AppDispatch = useAppDispatch();
+    const isPlayingBoolean = useAppSelector((state)=>state.PlaySlice);
+
+    if(isPlayingBoolean){
+        console.log("The video is Playing");
+    }else{
+        console.log("The video is paused");
+    }
+    const currentPlayingstream = useAppSelector((state) => state.CurrentPlayingStream) as Stream | null;
+    const video_Element_context = useRef(null);
+    if(currentPlayingstream!=null){
+    }
+    useEffect(() => {
+    if (currentPlayingstream && video_Element_context.current) {
+        console.log("The current playing id is ",JSON.stringify(currentPlayingstream));
+        let videoplayer = YoutubePlayer(video_Element_context.current, {
+        videoId: currentPlayingstream?.id
+        });
+        videoplayer.playVideo().then(()=>{
+            videoplayer.on("stateChange",(event)=>{
+                if(event.data==2){
+                    console.log("This is the state of the pause Video");
+                    AppDispatch(isPlaying("pause"));
+                }
+                if(event.data==1){
+                    console.log("This is the Playing data ");
+                    AppDispatch(isPlaying("play"));
+                }
+            })
+        })
+        // Add other player logic here
+    }
+}, [currentPlayingstream, video_Element_context.current]);
+
     return (
         <Card>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <Play className="w-5 h-5" />
-                    Now Playing
+                    Now Playing   {`Paused:${isPlayingBoolean}`}
                 </CardTitle>
             </CardHeader>
             <CardContent>
-                {currentPlaying ? (
+                {currentPlayingstream ? (
                     <div className="flex items-center justify-between w-full">
                         <div className="w-full">
                             <div className="w-full bg-amber-900">
                                 {!isOwner ? (
-                                    <iframe
-                                        loading="lazy"
-                                        className="w-full h-[300px]"
-                                        style={{ border: 'none', outline: 'none' }}
-                                        src={`https://www.youtube.com/embed/${currentPlaying.id}?modestbranding=1&rel=0&iv_load_policy=3&disablekb=1&fs=0&autoplay=1`}
-                                        allow="autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                        allowFullScreen={true}
-                                        title={currentPlaying.title}
-                                    />
+                              <div id="video-player" ref={video_Element_context} className="w-full h-[300px]">
+                              </div>
+                                // 
                                 ) : (
                                     <img 
-                                        src={`https://img.youtube.com/vi/${currentPlaying.id}/sddefault.jpg`} 
-                                        alt={currentPlaying.title}
+                                        src={`https://img.youtube.com/vi/${currentPlayingstream?.id}/sddefault.jpg`} 
+                                        alt={currentPlayingstream.title||""}
                                         className="w-full" 
                                     />
                                 )}
                             </div>
-                            <h3 className="text-md font-semibold">{currentPlaying.title}</h3>
-                            <p className="text-xs text-muted-foreground">Final score: {currentPlaying.upvotes} upvotes</p>
+                            <h3 className="text-md font-semibold">{currentPlayingstream?.title ||"Title"}</h3>
+                            <p className="text-xs text-muted-foreground">Final score: {currentPlayingstream?.upvotes} upvotes</p>
                         </div>
                     </div>
                 ) : (

@@ -7,10 +7,15 @@ export const pause  = (sectionId:string)=>{
 
 }
 
-1000 * 100 ; 
+// 1000 * 100 ; 
 // Minuted + Second == 1 -----> 100    =======> 60 ----> 6000
 
-export const Play = (videoTime :string) =>{
-//   ---->>>> 
-}
+// export const Play = (videoTime :string) =>{
+// //   ---->>>> 
+// const minute = minuteCalculater(videoLength:);
+// const timer = SetTimout(()=>{
+    
+
+// },1000)
+// }
  

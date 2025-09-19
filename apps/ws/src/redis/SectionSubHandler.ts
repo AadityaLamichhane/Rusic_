@@ -3,6 +3,7 @@ import { createStream } from "../stream/createStream";
 import { Socket_Sending, Socket_Sending_type } from "../type";
 import { playnext } from "./functions/playnext";
 import { StorageController } from "./Storage";
+import { sendToSocket } from "../useraction/SendToSocket";
 export async function Section_Subhandler(messege:string){
                 const parsedMessege = await JSON.parse(messege);
                 if(parsedMessege.payload.commands=="addQueue"){
@@ -17,7 +18,7 @@ export async function Section_Subhandler(messege:string){
                 }else if(parsedMessege.payload.commands=="GetState"){
                    const value =  await StorageController.getQueue(parsedMessege.sectionid??"");
                    
-                   const userSocket = userIdMapping.get(parsedMessege.userId);
+                    const userTOSend = userIdMapping.get(parsedMessege.userId);
                     const sendDetail:Socket_Sending= {
                         type:Socket_Sending_type.Stream_Man,
                         payload:{
@@ -26,6 +27,11 @@ export async function Section_Subhandler(messege:string){
                         },
                         queue:value
 
+                }
+                if(userTOSend?.socket!=undefined){
+                    sendToSocket(userTOSend?.socket,JSON.stringify(sendDetail))
+                }else{
+                    console.log("User Socket is not setted");
                 }
     
 }

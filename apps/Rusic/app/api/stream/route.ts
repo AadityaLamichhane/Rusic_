@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import z from "zod";
 import { youtubeRegex } from "@repo/lib/utils" 
-import { GetVideoDetails } from "youtube-search-api";
 const CreateStreamSchem = z.object({
     url: z.string(),
     email:z.string()
 })
     export async function POST(req:NextRequest){
+        const ytstream = (await import ("yt-stream")).default ; 
         try{
             const inputJson = await req.json();
-            console.log(inputJson);
             if(!inputJson){
                 console.log("Not any required information cannot get the input");
                 return NextResponse.json({msg:"Cannot find the infomration to add the stream"});
@@ -26,14 +25,15 @@ const CreateStreamSchem = z.object({
                     },
                 );
             }
-            const videoObject = await GetVideoDetails(videoId);
+            // const videoObject = await GetVideoDetails(videoId);
+            console.log("Thing is working till now ");
+            const videoObjects = await ytstream.getInfo(`${isYt[0]}`);
             return NextResponse.json({
                 msg:"Success in Job ",
                 hello:"This iis working ",
                 videoId:videoId,
                 videoUrl:isYt[0],
-                videoinfo:videoObject
-
+                videoinfo:videoObjects
             },{status:200})
         } 
         catch(err){
