@@ -45,12 +45,13 @@ try{
                 url:axiosresponce.data.videoUrl
             }
             queue_In_SectionId.push(newStream);
-        StorageController.addToQueue(dbResponce.sectionname, newStream).then(()=>{
-            console.log('the data is stored');
+        StorageController.addToQueue(dbResponce.sectionname, newStream).then((data )=>{
+            console.log('the data is stored',data);
         }); //Calling the db for the responce
         Section_Id_To_QueueMap.set(dbResponce.sectionId,queue_In_SectionId);
 
-// 
+//
+
             Socket_Sending_variable= {
                 ...Socket_Sending_variable,type:Socket_Sending_type.Create_Stream,
                 payload:{

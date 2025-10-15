@@ -10,7 +10,6 @@ export const JoinMessegeHandling:any = async(token:string,socketSendingVariable:
            const decryptedToken =  jwt.verify(token,process.env.AUTH_SECRET_WS);
            if(decryptedToken==null && decryptedToken==undefined){
             console.log("Cannot Continue ");
-
            }
            if(decryptedToken!=null){
                const prismaUser = await prisma.user.findFirst({
