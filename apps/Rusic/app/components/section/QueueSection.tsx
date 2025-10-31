@@ -6,6 +6,7 @@ import { QueueItem } from "./SectionType"
 import { useAppSelector, useAppDispatch } from "../store/hooks"
 import { setCurrentPlaying, selectCurrentPlaying } from "../store/slice/CurrentPlayingSlice"
 import { Stream } from "@repo/types/tsType"
+import { removefromQueue } from "../store/slice/QueueSlice"
 
 export function QueueSection({ userSocket, sectionId, userId }: { userSocket: WebSocket, sectionId: string, userId: string }) {
 	const [message, setMessage] = useState('');
@@ -38,13 +39,18 @@ export function QueueSection({ userSocket, sectionId, userId }: { userSocket: We
 			channelTitle: '', // Not available in queue item, set empty or add to queue type
 			videoId: nextItem.id
 		};
-		console.log('BEFORE DISPATCH - Playing next:', streamItem);
-		console.log('BEFORE DISPATCH - Current playing state:', currentPlaying);
-		// Dispatch the thunk to set current playing
-		const result = dispatch(setCurrentPlaying(streamItem));
-	}
+	console.log('BEFORE DISPATCH - Playing next:', streamItem);
+	console.log('BEFORE DISPATCH - Current playing state:', currentPlaying);
 	
-	// Auto-play: if nothing is playing and queue has items, play the first one
+	// Dispatch the thunk to set current playing
+	dispatch(setCurrentPlaying(streamItem));
+	
+	// Remove from queue - must pass object with id property
+	console.log('REMOVING from queue - item id:', nextItem.id);
+	dispatch(removefromQueue({ id: nextItem.id }));
+	
+	console.log('AFTER DISPATCH - Item should be removed from queue');
+}	// Auto-play: if nothing is playing and queue has items, play the first one
 	useEffect(() => {
 		if (!currentPlaying && sortedQueue.length > 0) {
 			console.log('Auto-playing first item in queue');
