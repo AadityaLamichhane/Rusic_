@@ -144,13 +144,13 @@ const queueapplication = useAppDispatch()
         {/* Now Playing Section */}
         {/* Add Item Section */}
         <div className="flex flex-col gap-8">
-        <CurrentPlaying currentPlaying={currentPlaying} isOwner={isOwner}></CurrentPlaying>
+        <CurrentPlaying isOwner={isOwner}></CurrentPlaying>
         <AddItemToSection newItemTitle = {newItemTitle} SetButtonLoading={setButtonLoading} setNewItemTitle = {setNewItemTitle} userSocket={userSocket} id={id} userid={userid} urlId={videocode.current}  buttonLoading={buttonLoading}>
         </AddItemToSection>
         </div>
         <div className="flex flex-col gap-8 ">
         {/* Queue Section */}
-        <QueueSection userSocket={userSocket} setCurrentPlaying={setCurrentPlaying} ></QueueSection>
+        <QueueSection userSocket={userSocket} sectionId={id} userId={userid}></QueueSection>
         <div className="flex drop-shadow-sm group  ">
           {youtubeId!=""?<>
               <div className="flex justify-center items-center w-full rounded-xl overflow-clip group-hover:scale-105 transition-all duration-200 ease-in-out  ">

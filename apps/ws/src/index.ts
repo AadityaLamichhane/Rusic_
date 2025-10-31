@@ -25,7 +25,6 @@ function ServerHandeling() {
 	const wss = new WebSocketServer({ port: 8080 });
 	wss.on("connection", (socket: any) => {
 		socket.on("message", async (message: string) => {
-
 			let socketSendingVariable: Socket_Sending = {
 				payload: {
 					type: "res",
@@ -33,7 +32,6 @@ function ServerHandeling() {
 				},
 				type: Socket_Sending_type.Initial_Call,
 			}
-
 			const messegeJson: Socket_Sending = JSON.parse(message);
 
 			if (messegeJson.token && messegeJson.type == Socket_Sending_type.Initial_Call) {
@@ -51,9 +49,7 @@ function ServerHandeling() {
 				socket.send(JSON.stringify(socketSendingVariable));
 			}
 			else if (messegeJson.payload.type == "req") {
-
 				switch (messegeJson.type) {
-
 					case Socket_Sending_type.Join_Section:
 						// Make the redis call simoultanous
 						//@ts-ignore
@@ -61,7 +57,6 @@ function ServerHandeling() {
 							console.log("you are not authenticated");
 							// Send the Socket mEsseging the error trigger
 						}
-
 						const sectionCreation = await Join_the_section(messegeJson.sectionid || '', socket);
 						if (sectionCreation == true) {
 							socketSendingVariable.type = Socket_Sending_type.Join_Section;
@@ -80,7 +75,6 @@ function ServerHandeling() {
 					case Socket_Sending_type.Stream_Man:
 						if (messegeJson.payload.commands == "GetState") {
 							const userId = socket.user.id;
-
 							pub.publish(messegeJson.sectionid || "", JSON.stringify({ ...messegeJson, userId }));
 						}
 						// take the Stream man functiona and either upvote downvote or get the current state from the redis application

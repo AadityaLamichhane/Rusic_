@@ -1,7 +1,15 @@
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card"
 import { Play } from "lucide-react"
 import { QueueItem } from "./SectionType"
-export const CurrentPlaying = ({ currentPlaying, isOwner }: { currentPlaying: QueueItem | null, isOwner: boolean }) => {
+import { useAppSelector } from "../store/hooks"
+import { selectCurrentPlaying } from "../store/slice/CurrentPlayingSlice"
+
+export const CurrentPlaying = ({ isOwner }: { isOwner: boolean }) => {
+    // Read current playing from Redux store
+    const currentPlaying = useAppSelector(selectCurrentPlaying);
+    
+    console.log('CurrentPlaying component - currentPlaying from Redux:', currentPlaying);
+    
     return (
         <Card>
             <CardHeader>

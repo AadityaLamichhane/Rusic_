@@ -1,7 +1,6 @@
 "use server"
 import  prisma from "@repo/db/client"
 import { authOptions } from "@repo/lib";
-import { SessionType } from "@repo/lib/wsenvsetup";
 import { getServerSession } from "next-auth";
 import { ExportType } from "./types";
 let exportVariable :ExportType = {

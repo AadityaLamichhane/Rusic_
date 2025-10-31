@@ -1,5 +1,4 @@
 import { createSlice } from "@reduxjs/toolkit"
-import { QueueItem } from "../../section/SectionType"
 import { Stream } from "@repo/types/tsType"
 const initialState:Stream[] =[]; 
  const QueueSlice = createSlice({
@@ -8,11 +7,11 @@ const initialState:Stream[] =[];
     reducers:{
         addQueue:(state,action)=>{
             if(state.find((currentState)=>currentState.id == action.payload.id)){
-                // This was created so dont add another with the same id 
-                return state;
+                return state; //Dont include the same string 
             }
             else if(state.length==0){
-                return [action.payload]
+
+                return [action.payload] // Make the one and only item in the state 
             }
             else{
                 return [...state,action.payload ];
