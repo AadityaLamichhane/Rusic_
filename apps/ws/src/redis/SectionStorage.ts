@@ -33,7 +33,9 @@ export class StorageClass {
 		const items: Stream[] = [];
 		for (const index of index_idPair) {
 			const Item = await this.redis.hGet(`section:${sectionname}:queueItems`, index);
-			items.push(JSON.parse(Item ?? ""));
+			if (Item) {
+				items.push(JSON.parse(Item));
+			}
 		}
 
 		return items;

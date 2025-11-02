@@ -13,7 +13,6 @@ import { addQueue } from "./store/slice/QueueSlice"
 import { ChangeLoading } from "./store/slice/AddButtonSlice"
 export default function QueueApp({ userSocket, id, userid, isOwner }: { userSocket: WebSocket, id: string, userid: string, isOwner: boolean }) {
 	const [currentPlaying, setCurrentPlaying] = useState<QueueItem | null>(null);
-
 	let socketSendingVariable: Socket_Sending = {
 		payload: {
 			type: "req",
@@ -54,7 +53,6 @@ export default function QueueApp({ userSocket, id, userid, isOwner }: { userSock
 			}
 		}
 	}, [newItemTitle]);
-	// Ws Application
 	useEffect(() => {
 		socketSendingVariable.sectionid = id;
 		userSocket?.send(JSON.stringify(socketSendingVariable));
@@ -68,6 +66,7 @@ export default function QueueApp({ userSocket, id, userid, isOwner }: { userSock
 						socketSendingVariable.type = Socket_Sending_type.Stream_Man;
 						socketSendingVariable.sectionid = id;
 						socketSendingVariable.payload.commands = "GetState"
+						console.log(`I am sending the backend this variable ${JSON.stringify(socketSendingVariable)}`);
 						userSocket.send(JSON.stringify(socketSendingVariable));
 					}
 					const debounceCall = (getState: () => void, delay: any) => {
@@ -81,7 +80,6 @@ export default function QueueApp({ userSocket, id, userid, isOwner }: { userSock
 					debounceCall(getState, 300);
 				}
 				if (parsedMessage.payload.commands == "GetState") {
-					console.log('Getting the state of the appliacation');
 					const queue: any[] = parsedMessage.queue;
 					queue.forEach((element) => {
 						const setupNewStream = {
@@ -106,7 +104,6 @@ export default function QueueApp({ userSocket, id, userid, isOwner }: { userSock
 					setYoutubeId('');
 					setNewItemTitle('');
 					queueapplication(addQueue(newStream));
-					console.log(parsedMessage.url)
 				}
 			}
 		}
@@ -126,11 +123,8 @@ export default function QueueApp({ userSocket, id, userid, isOwner }: { userSock
 			await navigator.clipboard.writeText(window.location.href)
 		}
 	}
-
 	return (
 		<div className="min-h-screen bg-background p-4">
-
-
 			<div className="max-w-4xl mx-auto space-y-6">
 				{/* Header */}
 				<div className="flex items-center justify-between">
@@ -140,7 +134,6 @@ export default function QueueApp({ userSocket, id, userid, isOwner }: { userSock
 						Share
 					</Button>
 				</div>
-
 				<div className="grid wrap-normal grid-cols-2 gap-8">
 					{/* Now Playing Section */}
 					{/* Add Item Section */}
@@ -156,7 +149,6 @@ export default function QueueApp({ userSocket, id, userid, isOwner }: { userSock
 							{youtubeId != "" ? <>
 								<div className="flex justify-center items-center w-full rounded-xl overflow-clip group-hover:scale-105 transition-all duration-200 ease-in-out  ">
 									<div className="mask-b-from-black-300 ">
-
 									</div>
 									<div className="absolute text-zinc-100 font-black opacity-0 group-hover:opacity-100 text-3xl">Adding</div>
 									<img src={youtubeId} alt="" className="w-full h-fit" />
@@ -168,8 +160,4 @@ export default function QueueApp({ userSocket, id, userid, isOwner }: { userSock
 			</div>
 		</div>
 	)
-
 }
-
-
-

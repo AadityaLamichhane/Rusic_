@@ -46,7 +46,7 @@ function ServerHandeling() {
 					socketSendingVariable.type = Socket_Sending_type.Initial_Call;
 					socketSendingVariable.msg = "fail"
 				}
-				console.log('sending the responce of the Auth to the user');
+				console.log('sending the responce of the Auth to the user'); // After the authentcii"
 				socket.send(JSON.stringify(socketSendingVariable));
 			}
 			else if (messegeJson.payload.type == "req") {
@@ -62,7 +62,6 @@ function ServerHandeling() {
 						const sectionCreation = await Join_the_section(messegeJson.sectionid || '', socket);
 						if (sectionCreation == true) {
 							socketSendingVariable.type = Socket_Sending_type.Join_Section;
-							getStream(socket, messegeJson.sectionid || "");
 							socketSendingVariable.msg = "success"
 							socketSendingVariable.msg = "New Section" // for the new section
 							socket.send(JSON.stringify(socketSendingVariable));
@@ -78,8 +77,10 @@ function ServerHandeling() {
 					case Socket_Sending_type.Stream_Man:
 						if (messegeJson.payload.commands == "GetState") {
 							const userId = socket.user.id;
-							console.log(`the user trying to get the state of the application is ${userId}`);
-							pub.publish(messegeJson.sectionid || "", JSON.stringify({ ...messegeJson, userId }));
+							if (messegeJson.sectionid) {
+								console.log("the section id is", messegeJson.sectionid);
+								pub.publish(messegeJson.sectionid, JSON.stringify({ ...messegeJson, userId }));
+							}
 						}
 						// take the Stream man functiona and either upvote downvote or get the current state from the redis application
 						break;

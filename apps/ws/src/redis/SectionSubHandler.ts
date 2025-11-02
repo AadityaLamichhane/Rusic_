@@ -1,4 +1,5 @@
 import { userIdMapping } from "..";
+import { sendToSocket } from "../useraction/SendToSocket";
 import { createStream } from "../stream/createStream";
 import { Socket_Sending, Socket_Sending_type } from "../type";
 import { playnext } from "./functions/playnext";
@@ -15,6 +16,7 @@ export async function Section_Subhandler(messege: string) {
 		}
 	} else if (parsedMessege.payload.commands == "GetState") {
 		const value = await StorageController.getQueue(parsedMessege.sectionid ?? "");
+		console.log(`The state of the application is ${value}`);
 		const userSocket = userIdMapping.get(parsedMessege.userId);
 		const sendDetail: Socket_Sending = {
 			type: Socket_Sending_type.Stream_Man,
@@ -23,8 +25,9 @@ export async function Section_Subhandler(messege: string) {
 				commands: "GetState"
 			},
 			queue: value
-
 		}
-
+		if (userSocket && userSocket.socket) {
+			sendToSocket(userSocket.socket, JSON.stringify(sendDetail));
+		}
 	}
 }
