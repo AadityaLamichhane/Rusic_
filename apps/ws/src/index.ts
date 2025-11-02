@@ -8,7 +8,8 @@ import { sectionMap } from "./UserClass";
 import { JoinMessegeHandling } from "./JoinAuth";
 import { loader, Sections } from "./sections"
 import { Join_the_section } from "./sections/src/JoinSection";
-import { StorageInit } from "./redis/Storage";
+import { StorageController, StorageInit } from "./redis/Storage";
+import { sendToSocket } from "./useraction/SendToSocket";
 export const SectionIdList: string[] = [];
 export const userIdMapping = new Map<string, User>();
 // redis
@@ -54,18 +55,20 @@ function ServerHandeling() {
 						// Make the redis call simoultanous
 						//@ts-ignore
 						if (!socket.user.id) {
+							// Todo better auth handeling with the dedicated erroe handeling method
 							console.log("you are not authenticated");
 							// Send the Socket mEsseging the error trigger
 						}
 						const sectionCreation = await Join_the_section(messegeJson.sectionid || '', socket);
 						if (sectionCreation == true) {
 							socketSendingVariable.type = Socket_Sending_type.Join_Section;
-							getStream(socket);
+							getStream(socket, messegeJson.sectionid || "");
 							socketSendingVariable.msg = "success"
+							socketSendingVariable.msg = "New Section" // for the new section
 							socket.send(JSON.stringify(socketSendingVariable));
 						}
 						else {
-							console.log("Getting the information from the Sections");
+							console.log('Error : Section Operation');
 						}
 						break;
 					case Socket_Sending_type.Create_Stream:
@@ -75,6 +78,7 @@ function ServerHandeling() {
 					case Socket_Sending_type.Stream_Man:
 						if (messegeJson.payload.commands == "GetState") {
 							const userId = socket.user.id;
+							console.log(`the user trying to get the state of the application is ${userId}`);
 							pub.publish(messegeJson.sectionid || "", JSON.stringify({ ...messegeJson, userId }));
 						}
 						// take the Stream man functiona and either upvote downvote or get the current state from the redis application
@@ -87,7 +91,6 @@ function ServerHandeling() {
 						return;
 				}
 			}
-
 		})
 		socket.on("close", (socket: any) => {
 			console.log(`before:${sectionMap.size}`);
@@ -100,11 +103,11 @@ function ServerHandeling() {
 			}
 			console.log(sectionMap.size);
 		})
-
 	});
 }
-
-const getStream = (socket: WebSocket) => {
-	console.log("temp commit for the ssh verification");
+const getStream = (socket: WebSocket, section_name: string) => {
+	console.log('You are trying to get the information of the sectionname ', section_name);
+	StorageController.getQueue(section_name).then((queueInformation) => {
+		console.log("the section information user is trying to get is the ", queueInformation);
+	});
 }
-
