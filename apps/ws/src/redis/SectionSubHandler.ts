@@ -15,8 +15,13 @@ export async function Section_Subhandler(messege: string) {
 			}
 		}
 	} else if (parsedMessege.payload.commands == "GetState") {
-		const value = await StorageController.getQueue(parsedMessege.sectionid ?? "");
-		console.log(`The state of the application is ${value}`);
+		const sectionId = parsedMessege.sectionid ?? "";
+		let currentPlaying = await StorageController.getcurrentPlaying(sectionId);
+		const queue = await StorageController.getQueue(sectionId);
+		if (!currentPlaying && queue.length > 0) {
+			await playnext(sectionId);
+			currentPlaying = await StorageController.getcurrentPlaying(sectionId);
+		}
 		const userSocket = userIdMapping.get(parsedMessege.userId);
 		const sendDetail: Socket_Sending = {
 			type: Socket_Sending_type.Stream_Man,
@@ -24,7 +29,9 @@ export async function Section_Subhandler(messege: string) {
 				type: "res",
 				commands: "GetState"
 			},
-			queue: value
+			queue: queue,
+			//@ts-ignore
+			currentplaying: currentPlaying ? JSON.parse(currentPlaying) : null
 		}
 		if (userSocket && userSocket.socket) {
 			sendToSocket(userSocket.socket, JSON.stringify(sendDetail));

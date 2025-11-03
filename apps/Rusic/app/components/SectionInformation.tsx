@@ -8,11 +8,11 @@ import { QueueSection } from "./section/QueueSection"
 import { Socket_Sending, Socket_Sending_type } from "@repo/types/tsType"
 import { QueueItem } from "./section/SectionType"
 import { CurrentPlaying } from "./section/CurrentPlaying"
+import { setCurrentPlaying } from "./store/slice/CurrentPlayingSlice";
 import { useAppDispatch } from "./store/hooks"
 import { addQueue } from "./store/slice/QueueSlice"
 import { ChangeLoading } from "./store/slice/AddButtonSlice"
 export default function QueueApp({ userSocket, id, userid, isOwner }: { userSocket: WebSocket, id: string, userid: string, isOwner: boolean }) {
-	const [currentPlaying, setCurrentPlaying] = useState<QueueItem | null>(null);
 	let socketSendingVariable: Socket_Sending = {
 		payload: {
 			type: "req",
@@ -66,7 +66,6 @@ export default function QueueApp({ userSocket, id, userid, isOwner }: { userSock
 						socketSendingVariable.type = Socket_Sending_type.Stream_Man;
 						socketSendingVariable.sectionid = id;
 						socketSendingVariable.payload.commands = "GetState"
-						console.log(`I am sending the backend this variable ${JSON.stringify(socketSendingVariable)}`);
 						userSocket.send(JSON.stringify(socketSendingVariable));
 					}
 					const debounceCall = (getState: () => void, delay: any) => {
@@ -81,6 +80,9 @@ export default function QueueApp({ userSocket, id, userid, isOwner }: { userSock
 				}
 				if (parsedMessage.payload.commands == "GetState") {
 					const queue: any[] = parsedMessage.queue;
+					if(parsedMessage.currentplaying){
+						queueapplication(setCurrentPlaying(parsedMessage.currentplaying))
+					}
 					queue.forEach((element) => {
 						const setupNewStream = {
 							id: element.videoId,
@@ -89,7 +91,9 @@ export default function QueueApp({ userSocket, id, userid, isOwner }: { userSock
 							addedAt: "",
 							url: element.url
 						}
+						queue
 						queueapplication(addQueue(setupNewStream));
+
 						queueapplication(ChangeLoading(true));
 					})
 				}

@@ -96,7 +96,7 @@ export const SendToConnectedUser = (dbResponce: any) => {
 		console.log(err);
 	}
 }
-const sendsocketVariable = (sectionname: string, socketSendingVariable: Socket_Sending) => {
+export const sendsocketVariable = (sectionname: string, socketSendingVariable: Socket_Sending) => {
 	const getSectionuser = sectionMap.get(sectionname);
 	if (getSectionuser != undefined || getSectionuser != null) {
 		for (let i = 0; i < getSectionuser.length; i++) {

@@ -12,13 +12,7 @@ export type Socket_Sending = {
 		type: "req" | "res",
 
 		commands: "addQueue" | "updateQueue" | "" | "GetState" | "playnext" | "playpayload";
-		videoInfo?: {
-			urlId?: string
-			title?: string,
-			channelTitle?: string,
-			videoId?: string,
-			url?: string
-		}
+		videoInfo?: VideoInformation
 	},
 	type: Socket_Sending_type,
 	url?: string,
@@ -27,6 +21,14 @@ export type Socket_Sending = {
 	msg?: String
 	userid?: string
 	queue?: Stream[]
+	currentplaying?: VideoInformation
+}
+export type VideoInformation = {
+	urlId?: string
+	title?: string,
+	channelTitle?: string,
+	videoId?: string,
+	url?: string
 }
 
 

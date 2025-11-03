@@ -77,10 +77,8 @@ function ServerHandeling() {
 					case Socket_Sending_type.Stream_Man:
 						if (messegeJson.payload.commands == "GetState") {
 							const userId = socket.user.id;
-							if (messegeJson.sectionid) {
-								console.log("the section id is", messegeJson.sectionid);
-								pub.publish(messegeJson.sectionid, JSON.stringify({ ...messegeJson, userId }));
-							}
+							console.log(messegeJson.sectionid);
+							pub.publish(messegeJson.sectionid || "", JSON.stringify({ ...messegeJson, userId }));
 						}
 						// take the Stream man functiona and either upvote downvote or get the current state from the redis application
 						break;
