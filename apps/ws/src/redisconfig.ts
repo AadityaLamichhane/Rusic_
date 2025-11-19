@@ -31,11 +31,10 @@ export async function initializeRedis() {
 
 process.on('SIGINT', async () => {
 
-	const queueId = section
-	const sections_array = SectionIdList.forEach((section_id) => {
-		StorageController.deleteQueue(section_id);
-	})
-
-
+	//const queueId = section
+	//const sections_array = SectionIdList.forEach((section_id) => {
+	//	StorageController.deleteQueue(section_id);
+	//})
+	console.log("redis is closing");
 	process.exit(0);
 });

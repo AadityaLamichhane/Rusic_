@@ -21,7 +21,7 @@ export const CurrentPlaying = ({ isOwner }: { isOwner: boolean }) => {
 					<div className="flex items-center justify-between w-full">
 						<div className="w-full">
 							<div className="w-full bg-amber-900">
-								{!!isOwner ? (
+								{isOwner ? (
 									<iframe
 										loading="lazy"
 										className="w-full h-[300px]"
