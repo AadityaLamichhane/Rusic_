@@ -63,19 +63,7 @@ export default function QueueApp({ userSocket, id, userid, isOwner }: { userSock
 			const parsedMessage = JSON.parse(message.data);
 			const CurrentTime = new Date().toLocaleTimeString();
 			if (parsedMessage.payload.type == "res") {
-				if (parsedMessage.payload.commands == "addQueue") {
-					const newStream = {
-						id: parsedMessage.payload.videoInfo.videoId,
-						title: parsedMessage.payload.videoInfo.title,
-						upvotes: 0,
-						addedAt: CurrentTime,
-						url: parsedMessage.payload.videoInfo.url
-					};
-					console.log("While adding to the queue the type that is being obtained is ", JSON.stringify(parsedMessage.type));
-					setYoutubeId('');
-					setNewItemTitle('');
-					queueapplication(addQueue(newStream));
-				}
+
 				switch (parsedMessage.type) {
 					case Socket_Sending_type.Join_Section:
 						if (parsedMessage.msg == "success") {  // Call the get state when you get added to the section
@@ -126,7 +114,20 @@ export default function QueueApp({ userSocket, id, userid, isOwner }: { userSock
 						console.log("responce come from the create section")
 						break;
 					case Socket_Sending_type.Create_Stream:
-						console.log("respponce from teh stream creation")
+						if (parsedMessage.payload.commands == "addQueue") {
+							const newStream = {
+								id: parsedMessage.payload.videoInfo.videoId,
+								title: parsedMessage.payload.videoInfo.title,
+								upvotes: 0,
+								addedAt: CurrentTime,
+								url: parsedMessage.payload.videoInfo.url
+							};
+							console.log("While adding to the queue the type that is being obtained is ", JSON.stringify(parsedMessage.type));
+							setYoutubeId('');
+							setNewItemTitle('');
+							queueapplication(addQueue(newStream));
+						}
+
 						break;
 
 
