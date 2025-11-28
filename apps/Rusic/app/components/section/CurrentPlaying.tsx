@@ -26,14 +26,14 @@ export const CurrentPlaying = ({ isOwner }: { isOwner: boolean }) => {
 										loading="lazy"
 										className="w-full h-[300px]"
 										style={{ border: 'none', outline: 'none' }}
-										src={`https://www.youtube.com/embed/${currentPlaying.id}?modestbranding=1&rel=0&iv_load_policy=3&disablekb=1&fs=0&autoplay=1`}
+										src={`https://www.youtube.com/embed/${currentPlaying.videoId}?modestbranding=1&rel=0&iv_load_policy=3&disablekb=1&fs=0&autoplay=1`}
 										allow="autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
 										allowFullScreen={true}
 										title={currentPlaying.title}
 									/>
 								) : (
 									<img
-										src={`https://img.youtube.com/vi/${currentPlaying.id}/sddefault.jpg`}
+										src={`https://img.youtube.com/vi/${currentPlaying.videoId}/sddefault.jpg`}
 										alt={currentPlaying.title}
 										className="w-full"
 									/>

@@ -1,6 +1,4 @@
 import { WebSocketServer } from "ws";
-import * as dotenv from "dotenv";
-dotenv.config();
 import { pub, initializeRedis } from "./redisconfig";
 import { User } from "./UserClass";
 import { Socket_Sending, Socket_Sending_type } from "./type";
@@ -54,16 +52,18 @@ function ServerHandeling() {
 					case Socket_Sending_type.Join_Section:
 						// Make the redis call simoultanous
 						//@ts-ignore
-						if (!socket.user.id) {
+						if (!socket.user || !socket.user.id || socket.user == undefined) {
 							// Todo better auth handeling with the dedicated erroe handeling method
-							console.log("you are not authenticated");
+							socketSendingVariable.type = Socket_Sending_type.Join_Section;
+							socketSendingVariable.msg = "failed: UNAUTHENTICATED"
+							socket.send(JSON.stringify(socketSendingVariable));
+
 							// Send the Socket mEsseging the error trigger
 						}
 						const sectionCreation = await Join_the_section(messegeJson.sectionid || '', socket);
 						if (sectionCreation == true) {
 							socketSendingVariable.type = Socket_Sending_type.Join_Section;
 							socketSendingVariable.msg = "success"
-							socketSendingVariable.msg = "New Section" // for the new section
 							socket.send(JSON.stringify(socketSendingVariable));
 						}
 						else {

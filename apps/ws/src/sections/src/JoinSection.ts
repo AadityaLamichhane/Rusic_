@@ -6,6 +6,7 @@ import { Section_Subhandler } from "../../redis/SectionSubHandler";
 export async function Join_the_section(sectionid: string, socket: WebSocket) {
 	//@ts-ignore
 	const user: User = socket.user;
+	console.log('The socket of the user is ', user);
 	// If section exists in map
 	if (sectionMap.has(sectionid)) {
 		const usersarray = sectionMap.get(sectionid);

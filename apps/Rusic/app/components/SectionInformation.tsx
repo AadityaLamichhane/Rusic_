@@ -12,6 +12,7 @@ import { setCurrentPlaying } from "./store/slice/CurrentPlayingSlice";
 import { useAppDispatch } from "./store/hooks"
 import { addQueue } from "./store/slice/QueueSlice"
 import { ChangeLoading } from "./store/slice/AddButtonSlice"
+import { redirect } from "next/navigation"
 export default function QueueApp({ userSocket, id, userid, isOwner }: { userSocket: WebSocket, id: string, userid: string, isOwner: boolean }) {
 	let socketSendingVariable: Socket_Sending = {
 		payload: {
@@ -27,6 +28,8 @@ export default function QueueApp({ userSocket, id, userid, isOwner }: { userSock
 	const [buttonLoading, setButtonLoading] = useState<boolean>(false);
 	const videocode = useRef<string>('');
 	const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+	const updateOnChange = (socket: WebSocket) => {
+	}
 	useEffect(() => {
 		if (newItemTitle == "" && youtubeId != '') {
 			setYoutubeId('');
@@ -59,55 +62,73 @@ export default function QueueApp({ userSocket, id, userid, isOwner }: { userSock
 		const socketHandler = async (message: MessageEvent) => {
 			const parsedMessage = JSON.parse(message.data);
 			const CurrentTime = new Date().toLocaleTimeString();
-			console.log(parsedMessage);
 			if (parsedMessage.payload.type == "res") {
-				if (parsedMessage.type == Socket_Sending_type.Join_Section) {
-					const getState = () => {
-						socketSendingVariable.type = Socket_Sending_type.Stream_Man;
-						socketSendingVariable.sectionid = id;
-						socketSendingVariable.payload.commands = "GetState"
-						userSocket.send(JSON.stringify(socketSendingVariable));
-					}
-					const debounceCall = (getState: () => void, delay: any) => {
-						let timer;
-						clearTimeout(timer);
-						timer = setTimeout(() => {
-							getState();
-
-						}, delay);
-					}
-					debounceCall(getState, 300);
-				}
-				if (parsedMessage.payload.commands == "GetState") {
-					const queue: any[] = parsedMessage.queue;
-					if(parsedMessage.currentplaying){
-						queueapplication(setCurrentPlaying(parsedMessage.currentplaying))
-					}
-					queue.forEach((element) => {
-						const setupNewStream = {
-							id: element.videoId,
-							title: element.title,
-							upvotes: element.upvotes,
-							addedAt: "",
-							url: element.url
+				switch (parsedMessage.type) {
+					case Socket_Sending_type.Join_Section:
+						if (parsedMessage.msg == "success") {  // Call the get state when you get added to the section
+							const getState = () => {
+								socketSendingVariable.type = Socket_Sending_type.Stream_Man;
+								socketSendingVariable.sectionid = id;
+								socketSendingVariable.payload.commands = "GetState"
+								userSocket.send(JSON.stringify(socketSendingVariable));
+							}
+							const debounceCall = (getState: () => void, delay: any) => {
+								let timer;
+								clearTimeout(timer);
+								timer = setTimeout(() => {
+									getState();
+								}, delay);
+							}
+							debounceCall(getState, 300);
 						}
-						queue
-						queueapplication(addQueue(setupNewStream));
+						break;
+					case Socket_Sending_type.Initial_Call:
+						if (parsedMessage.msg === "fail" || parsedMessage.includes("failed:")) { //edge case for the unsuccessful attempt for the message
+							if (parsedMessage.msg.includes("UNAUTHENTICATED"))
+								redirect("/signin")
+						}
+						break;
+					case Socket_Sending_type.Stream_Man:
+						if (parsedMessage.payload.commands == "GetState") {
+							const queue: any[] = parsedMessage.queue;
+							if (parsedMessage.currentplaying) {
+								queueapplication(setCurrentPlaying(parsedMessage.currentplaying))
+							}
+							queue.forEach((element) => {
+								const setupNewStream = {
+									id: element.videoId,
+									title: element.title,
+									upvotes: element.upvotes,
+									addedAt: "",
+									url: element.url
+								}
+								queue
+								queueapplication(addQueue(setupNewStream));
 
-						queueapplication(ChangeLoading(true));
-					})
-				}
-				if (parsedMessage.payload.commands == "addQueue") {
-					const newStream = {
-						id: parsedMessage.payload.videoInfo.videoId,
-						title: parsedMessage.payload.videoInfo.title,
-						upvotes: 0,
-						addedAt: CurrentTime,
-						url: parsedMessage.payload.videoInfo.url
-					};
-					setYoutubeId('');
-					setNewItemTitle('');
-					queueapplication(addQueue(newStream));
+								queueapplication(ChangeLoading(true));
+							})
+						}
+						if (parsedMessage.payload.commands == "addQueue") {
+							const newStream = {
+								id: parsedMessage.payload.videoInfo.videoId,
+								title: parsedMessage.payload.videoInfo.title,
+								upvotes: 0,
+								addedAt: CurrentTime,
+								url: parsedMessage.payload.videoInfo.url
+							};
+							setYoutubeId('');
+							setNewItemTitle('');
+							queueapplication(addQueue(newStream));
+						}
+						break;
+					case Socket_Sending_type.Create_Section:
+						console.log("responce come from the create section")
+						break;
+					case Socket_Sending_type.Create_Stream:
+						console.log("respponce from teh stream creation")
+						break;
+
+
 				}
 			}
 		}
