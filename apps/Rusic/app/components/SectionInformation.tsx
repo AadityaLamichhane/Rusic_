@@ -63,6 +63,19 @@ export default function QueueApp({ userSocket, id, userid, isOwner }: { userSock
 			const parsedMessage = JSON.parse(message.data);
 			const CurrentTime = new Date().toLocaleTimeString();
 			if (parsedMessage.payload.type == "res") {
+				if (parsedMessage.payload.commands == "addQueue") {
+					const newStream = {
+						id: parsedMessage.payload.videoInfo.videoId,
+						title: parsedMessage.payload.videoInfo.title,
+						upvotes: 0,
+						addedAt: CurrentTime,
+						url: parsedMessage.payload.videoInfo.url
+					};
+					console.log("While adding to the queue the type that is being obtained is ", JSON.stringify(parsedMessage.type));
+					setYoutubeId('');
+					setNewItemTitle('');
+					queueapplication(addQueue(newStream));
+				}
 				switch (parsedMessage.type) {
 					case Socket_Sending_type.Join_Section:
 						if (parsedMessage.msg == "success") {  // Call the get state when you get added to the section
@@ -83,7 +96,7 @@ export default function QueueApp({ userSocket, id, userid, isOwner }: { userSock
 						}
 						break;
 					case Socket_Sending_type.Initial_Call:
-						if (parsedMessage.msg === "fail" || parsedMessage.includes("failed:")) { //edge case for the unsuccessful attempt for the message
+						if (parsedMessage.msg === "fail" || parsedMessage.includes("failed")) { //edge case for the unsuccessful attempt for the message
 							if (parsedMessage.msg.includes("UNAUTHENTICATED"))
 								redirect("/signin")
 						}
@@ -107,18 +120,6 @@ export default function QueueApp({ userSocket, id, userid, isOwner }: { userSock
 
 								queueapplication(ChangeLoading(true));
 							})
-						}
-						if (parsedMessage.payload.commands == "addQueue") {
-							const newStream = {
-								id: parsedMessage.payload.videoInfo.videoId,
-								title: parsedMessage.payload.videoInfo.title,
-								upvotes: 0,
-								addedAt: CurrentTime,
-								url: parsedMessage.payload.videoInfo.url
-							};
-							setYoutubeId('');
-							setNewItemTitle('');
-							queueapplication(addQueue(newStream));
 						}
 						break;
 					case Socket_Sending_type.Create_Section:
