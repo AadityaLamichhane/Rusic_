@@ -8,6 +8,7 @@ import { loader, Sections } from "./sections"
 import { Join_the_section } from "./sections/src/JoinSection";
 import { StorageController, StorageInit } from "./redis/Storage";
 import { sendToSocket } from "./useraction/SendToSocket";
+import { playnext } from "./redis/functions/playnext";
 export const SectionIdList: string[] = [];
 export const userIdMapping = new Map<string, User>();
 // redis
@@ -79,6 +80,12 @@ function ServerHandeling() {
 							const userId = socket.user.id;
 							console.log(messegeJson.sectionid);
 							pub.publish(messegeJson.sectionid || "", JSON.stringify({ ...messegeJson, userId }));
+						}
+						if (messegeJson.payload.commands == "playnext") {
+							playnext(messegeJson.sectionid ?? "");
+						}
+						if (messegeJson.payload.commands == "updateQueue") {
+
 						}
 						// take the Stream man functiona and either upvote downvote or get the current state from the redis application
 						break;
