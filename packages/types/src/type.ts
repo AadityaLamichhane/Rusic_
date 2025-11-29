@@ -1,7 +1,7 @@
 export enum Socket_Sending_type {
-	Stream_Man,
+	Stream_Man,//0
 	Join_Section,
-	Create_Stream,
+	Create_Stream,//2
 	Initial_Call,
 	Create_Section
 }

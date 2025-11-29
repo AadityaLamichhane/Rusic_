@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button"
+import { ObservserType } from "../SectionInformation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge, ChevronUp, Play } from "lucide-react"
 import { useEffect, useState } from "react"
@@ -8,7 +9,7 @@ import { setCurrentPlaying, selectCurrentPlaying } from "../store/slice/CurrentP
 import { Stream } from "@repo/types/tsType"
 import { removefromQueue } from "../store/slice/QueueSlice"
 
-export function QueueSection({ userSocket, sectionId, userId }: { userSocket: WebSocket, sectionId: string, userId: string }) {
+export function QueueSection({ userSocket, sectionId, userId, setObserver }: { userSocket: WebSocket, sectionId: string, userId: string, setObserver: (content: any) => void }) {
 	const [message, setMessage] = useState('');
 	const dispatch = useAppDispatch();
 	const currentPlaying = useAppSelector(selectCurrentPlaying);
@@ -40,11 +41,8 @@ export function QueueSection({ userSocket, sectionId, userId }: { userSocket: We
 			videoId: nextItem.id
 		};
 		// Dispatch the thunk to set current playing
-		userSocket.addEventListener('message', (data) => {
-			console.log(data);
-			console.log("listening from the information");
-		})
 		dispatch(setCurrentPlaying(streamItem));
+		setObserver((getState: ObservserType) => { return { ...getState, LoadPlayNext: true } }); // Trigger the observer to observe for the get state queue
 		// Remove from queue - must pass object with id property
 		dispatch(removefromQueue({ id: nextItem.id }));
 

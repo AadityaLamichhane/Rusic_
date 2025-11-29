@@ -9,11 +9,17 @@ import { Socket_Sending, Socket_Sending_type } from "@repo/types/tsType"
 import { QueueItem } from "./section/SectionType"
 import { CurrentPlaying } from "./section/CurrentPlaying"
 import { setCurrentPlaying } from "./store/slice/CurrentPlayingSlice";
-import { useAppDispatch } from "./store/hooks"
+import { useAppDispatch, useAppSelector } from "./store/hooks"
 import { addQueue } from "./store/slice/QueueSlice"
 import { ChangeLoading } from "./store/slice/AddButtonSlice"
 import { redirect } from "next/navigation"
+export type ObservserType = {
+	LoadPlayNext: boolean,
+	LoadUpvoteTrigger: boolean,
+	LoadManipulateTrigger: boolean
+}
 export default function QueueApp({ userSocket, id, userid, isOwner }: { userSocket: WebSocket, id: string, userid: string, isOwner: boolean }) {
+
 	let socketSendingVariable: Socket_Sending = {
 		payload: {
 			type: "req",
@@ -23,11 +29,36 @@ export default function QueueApp({ userSocket, id, userid, isOwner }: { userSock
 		type: Socket_Sending_type.Join_Section
 	}
 	const queueapplication = useAppDispatch()
+	const currentSelector = useAppSelector((state) => state.currentPlaying);
 	const [newItemTitle, setNewItemTitle] = useState("")
 	const [youtubeId, setYoutubeId] = useState('');
 	const [buttonLoading, setButtonLoading] = useState<boolean>(false);
+	const [observer, setObserver] = useState<ObservserType>({
+		LoadManipulateTrigger: false,
+		LoadPlayNext: false,
+		LoadUpvoteTrigger: false
+	});
 	const videocode = useRef<string>('');
 	const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+	useEffect(() => {
+		// Get the current state of the application 
+		if (observer.LoadPlayNext) { // observer observed the command to play next playlist
+			const getState = () => {
+				socketSendingVariable.type = Socket_Sending_type.Stream_Man;
+				socketSendingVariable.sectionid = id;
+				socketSendingVariable.payload.commands = "playnext"
+				userSocket.send(JSON.stringify(socketSendingVariable));
+			}
+			const debounceCall = (getState: () => void, delay: any) => {
+				let timer;
+				clearTimeout(timer);
+				timer = setTimeout(() => {
+					getState();
+				}, delay);
+			}
+			debounceCall(getState, 300);
+		}
+	}, [observer])
 	const updateOnChange = (socket: WebSocket) => {
 	}
 	useEffect(() => {
@@ -63,7 +94,6 @@ export default function QueueApp({ userSocket, id, userid, isOwner }: { userSock
 			const parsedMessage = JSON.parse(message.data);
 			const CurrentTime = new Date().toLocaleTimeString();
 			if (parsedMessage.payload.type == "res") {
-
 				switch (parsedMessage.type) {
 					case Socket_Sending_type.Join_Section:
 						if (parsedMessage.msg == "success") {  // Call the get state when you get added to the section
@@ -103,10 +133,15 @@ export default function QueueApp({ userSocket, id, userid, isOwner }: { userSock
 									addedAt: "",
 									url: element.url
 								}
-								queue
-								queueapplication(addQueue(setupNewStream));
 
+								queueapplication(addQueue(setupNewStream));
 								queueapplication(ChangeLoading(true));
+								setObserver((value: ObservserType) => {
+									return {
+										...value,
+										LoadPlayNext: false // The play next is handled
+									}
+								})
 							})
 						}
 						break;
