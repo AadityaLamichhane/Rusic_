@@ -42,11 +42,11 @@ export const SendToConnectedUser = (dbResponce: any) => {
 					videoId: axiosresponce.data.videoinfo.id,
 					url: axiosresponce.data.videoUrl
 				}
-				const current_playing = StorageController.getcurrentPlaying(dbResponce.sectionname).then((data) => {
+				const current_playing = StorageController.getcurrentPlaying(dbResponce.sectionname).then(async (data) => {
 					console.log('getting the current playing while sending to the connected user ', data);
 					if (data == null || data?.length == 0 || data == undefined) { // basically in absence of current playing information it should just add to the current playing this 
 						//Pop the top of the queue and then play next or play next and skip the rest 
-						StorageController.setCurrentPlaying(newStream, dbResponce.sectionname); // set this to the playing is there is nothing in the playing thing 
+						await StorageController.setCurrentPlaying(newStream, dbResponce.sectionname); // set this to the playing is there is nothing in the playing thing 
 						// Todo req the frontend to play this stream 
 						Socket_Sending_variable = {
 							...Socket_Sending_variable, type: Socket_Sending_type.Stream_Man,
@@ -68,6 +68,8 @@ export const SendToConnectedUser = (dbResponce: any) => {
 							console.log('the data is stored', data);
 						}); //Calling the db for the responce
 					}
+				}).catch((err) => {
+					console.error("Error in setCurrentPlaying promise chain:", err);
 				})
 				Section_Id_To_QueueMap.set(dbResponce.sectionId, queue_In_SectionId); // now this will create the already existing thing in the line no 27 
 				Socket_Sending_variable = {
@@ -97,12 +99,14 @@ export const SendToConnectedUser = (dbResponce: any) => {
 	}
 }
 export const sendsocketVariable = (sectionname: string, socketSendingVariable: Socket_Sending) => {
+
 	const getSectionuser = sectionMap.get(sectionname);
 	if (getSectionuser != undefined || getSectionuser != null) {
 		for (let i = 0; i < getSectionuser.length; i++) {
 			const idMappedUser = userIdMapping.get(getSectionuser[i].id);
 			if (getSectionuser[i] != undefined && getSectionuser[i].socket != undefined) {
 				idMappedUser?.socket?.send(JSON.stringify(socketSendingVariable));
+				console.log("Sending to all the user about the information");
 			}
 		}
 	}

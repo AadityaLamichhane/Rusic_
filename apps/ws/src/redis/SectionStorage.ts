@@ -15,15 +15,23 @@ export class StorageClass {
 		console.log('The data is stored in the queue');
 		return true;
 	}
-	async UpdateQueue(sectionId: string, QueueItem: Stream, isIncr: boolean) {
-		const QueueId = QueueItem.id;
-		isIncr ? await this.redis.zIncrBy(`section:${sectionId}:sortedItems`, 1, QueueId) : await this.redis.zIncrBy(`section:${sectionId}:sortedItems`, -1, QueueId)
+	async UpdateQueue(sectionId: string, QueueId: string, isIncr: boolean) {
+		try {
 
+			isIncr ? await this.redis.zIncrBy(`section:${sectionId}:sortedItems`, 1, QueueId) : await this.redis.zIncrBy(`section:${sectionId}:sortedItems`, -1, QueueId) // This willl increase the section Uvote or the queue with the 1  number
+			console.log("Updted the zindex of the section using the redis queue indeex");
+			return true;
+		} catch (err) {
+			console.error("Error while updating the status of the applicaion");
+			return false;
+		}
+		return true;
 	}
 	async deleteQueue(sectionId: string, QueueId: string) {
+		console.log(`The tope element in the ${sectionId} and the queue song with the qeueue Id ${QueueId} is deleted`);
 		await Promise.all([
 			this.redis.hDel(`section:${sectionId}:queueItems`, QueueId),
-			this.redis.hDel(`section:${sectionId}:sortedItems`, QueueId),
+			this.redis.zRem(`section:${sectionId}:sortedItems`, QueueId),
 		])
 		console.log("item Deleted in the server");
 
@@ -37,17 +45,14 @@ export class StorageClass {
 				items.push(JSON.parse(Item));
 			}
 		}
-
 		return items;
 	}
 	async setCurrentPlaying(streamInformation: Stream, sectionname: string) {
-		console.log(`The redis is storing the information of the stream${streamInformation}`);
-		const hset = await this.redis.hSet(`section:${sectionname}:currentPlaying`, sectionname, JSON.stringify(streamInformation));
+		await this.redis.hSet(`section:${sectionname}:currentPlaying`, sectionname, JSON.stringify(streamInformation));
 		return true;
 	}
 	async getcurrentPlaying(sectionname: string) {
 		const getCurrentdata = await this.redis.hGet(`section:${sectionname}:currentPlaying`, sectionname);
-		console.log('Geting the current playing item', getCurrentdata);
 		return getCurrentdata;
 	}
 
