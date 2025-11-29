@@ -14,6 +14,17 @@ export function QueueSection({ userSocket, sectionId, userId, setObserver }: { u
 	const dispatch = useAppDispatch();
 	const currentPlaying = useAppSelector(selectCurrentPlaying);
 	const upvoteItem = (id: string) => {
+		setObserver((value: ObservserType) => {
+			return {
+				...value,
+				LoadUpvoteTrigger: {
+					id: id,
+					sectionname: sectionId,
+					upVoteTrigger: true
+				}
+			}
+		})
+		// trigger the upvote action for the current playing in the redux 
 	}
 
 	//   To decide what to play next we need to make the request from the frontend but we will have the data and the order collected from the backend

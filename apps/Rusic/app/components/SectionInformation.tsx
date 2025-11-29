@@ -13,9 +13,14 @@ import { useAppDispatch, useAppSelector } from "./store/hooks"
 import { addQueue } from "./store/slice/QueueSlice"
 import { ChangeLoading } from "./store/slice/AddButtonSlice"
 import { redirect } from "next/navigation"
+export type UpvoteTrigger = {
+	id: string,
+	sectionname: string
+	upVoteTrigger: boolean
+}
 export type ObservserType = {
 	LoadPlayNext: boolean,
-	LoadUpvoteTrigger: boolean,
+	LoadUpvoteTrigger: UpvoteTrigger,
 	LoadManipulateTrigger: boolean
 }
 export default function QueueApp({ userSocket, id, userid, isOwner }: { userSocket: WebSocket, id: string, userid: string, isOwner: boolean }) {
@@ -36,13 +41,18 @@ export default function QueueApp({ userSocket, id, userid, isOwner }: { userSock
 	const [observer, setObserver] = useState<ObservserType>({
 		LoadManipulateTrigger: false,
 		LoadPlayNext: false,
-		LoadUpvoteTrigger: false
+		LoadUpvoteTrigger: {
+			id: "",
+			sectionname: id,
+			upVoteTrigger: false
+		}
 	});
 	const videocode = useRef<string>('');
 	const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 	useEffect(() => {
 		// Get the current state of the application 
 		if (observer.LoadPlayNext) { // observer observed the command to play next playlist
+			console.log('The section name is ', id);
 			const getState = () => {
 				socketSendingVariable.type = Socket_Sending_type.Stream_Man;
 				socketSendingVariable.sectionid = id;
@@ -57,6 +67,25 @@ export default function QueueApp({ userSocket, id, userid, isOwner }: { userSock
 				}, delay);
 			}
 			debounceCall(getState, 300);
+		}
+		if (observer.LoadUpvoteTrigger.upVoteTrigger) {
+			const upvote = () => {
+				socketSendingVariable.type = Socket_Sending_type.Stream_Man;
+				socketSendingVariable.sectionid = id; // Get section
+				socketSendingVariable.payload.commands = "updateQueue" // Upvote obvk
+				socketSendingVariable.payload.videoInfo = {
+					videoId: observer.LoadUpvoteTrigger.id
+				},
+					userSocket.send(JSON.stringify(socketSendingVariable));
+			}
+			const debounceCall = (getState: () => void, delay: any) => {
+				let timer;
+				clearTimeout(timer);
+				timer = setTimeout(() => {
+					getState();
+				}, delay);
+			}
+			debounceCall(upvote, 300);
 		}
 	}, [observer])
 	const updateOnChange = (socket: WebSocket) => {
@@ -206,7 +235,7 @@ export default function QueueApp({ userSocket, id, userid, isOwner }: { userSock
 					</div>
 					<div className="flex flex-col gap-8 ">
 						{/* Queue Section */}
-						<QueueSection userSocket={userSocket} sectionId={id} userId={userid}></QueueSection>
+						<QueueSection userSocket={userSocket} sectionId={id} userId={userid} setObserver={setObserver}></QueueSection>
 						<div className="flex drop-shadow-sm group  ">
 							{youtubeId != "" ? <>
 								<div className="flex justify-center items-center w-full rounded-xl overflow-clip group-hover:scale-105 transition-all duration-200 ease-in-out  ">
